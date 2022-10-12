@@ -9,7 +9,7 @@ import argparse
 import logging
 import sys
 
-from cheshire.dummy import do_something
+from energy_comms.dummy import do_something
 
 # This is the module-level logger, for any logs
 logger = logging.getLogger(__name__)

@@ -1,4 +1,4 @@
-name: cheshire
+name: energy_comms
 channels:
   - conda-forge
   - defaults

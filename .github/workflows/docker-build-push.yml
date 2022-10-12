@@ -13,7 +13,7 @@ jobs:
         id: docker_metadata
         uses: docker/metadata-action@v4.0.1
         with:
-          images: catalystcoop/cheshire-docker-build-push
+          images: catalystcoop/energy_comms-docker-build-push
           flavor: |
             latest=auto
           tags: |

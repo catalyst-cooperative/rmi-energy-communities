@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Setup script to make Cheshire installable with pip."""
+"""Setup script to make energy_comms installable with pip."""
 
 from pathlib import Path
 
@@ -11,7 +11,7 @@ long_description = readme_path.read_text()
 
 setup(
     # This should be the *installed* package name e.g. catalystcoop.pudl not pudl
-    name="catalystcoop.cheshire",
+    name="catalystcoop.energy_comms",
     description="A one line description of the package.",
     long_description=long_description,
     long_description_content_type="text/x-rst",
@@ -24,9 +24,9 @@ setup(
     maintainer_email="pudl@catalyst.coop",
     url="",  # Can be repo or docs URL if no separate web page exists.
     project_urls={
-        "Source": "https://github.com/catalyst-cooperative/cheshire",
-        "Documentation": "https://catalystcoop-cheshire.readthedocs.io",
-        "Issue Tracker": "https://github.com/catalyst-cooperative/cheshire/issues",
+        "Source": "https://github.com/catalyst-cooperative/energy_comms",
+        "Documentation": "https://catalystcoop-energy_comms.readthedocs.io",
+        "Issue Tracker": "https://github.com/catalyst-cooperative/energy_comms/issues",
     },
     license="MIT",
     # Fill in search keywords that users might use to find the package
@@ -105,7 +105,7 @@ setup(
     entry_points={
         "console_scripts": [
             # "script_name = dotted.module.path.to:main_script_function",
-            "winston = cheshire.cli:main",
+            "winston = energy_comms.cli:main",
         ]
     },
 )

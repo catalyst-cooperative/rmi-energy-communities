@@ -1,5 +1,5 @@
 ===============================================================================
-The Catalyst Python Project Template
+RMI and Catalyst: Identifying Energy Communities
 ===============================================================================
 
 .. include:: ../README.rst

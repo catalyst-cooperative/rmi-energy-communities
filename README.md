@@ -40,5 +40,6 @@ conda activate energy_comms
 ```
 
 **Sources**
-Thank you to Resources for the Future for generously sharing with us their own work and insight on
+
+A big thank you to Resources for the Future for generously sharing with us their own work and insight on
 identifing energy communities.

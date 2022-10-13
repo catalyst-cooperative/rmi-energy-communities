@@ -37,6 +37,7 @@ setup(
     install_requires=[
         "pandas>=1.4,<1.5.1",
         "sqlalchemy>=1.4,<1.4.42",
+        "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
     ],
     extras_require={
         "dev": [

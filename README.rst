@@ -48,7 +48,7 @@ Note that the software in this repository depends on
 and the ``setup.py`` in thisrepository indicates that it should be installed 
 directly from GitHub. This can be a bit slow, as ``pip`` (which in this case is 
 running inside of a ``conda`` environment) clones the entire history of the 
-repository containing the package being installed. How long ittakes will depend on 
+repository containing the package being installed. How long it takes will depend on 
 the speed of your network connection. It might take ~5 minutes.
 
 Thank You

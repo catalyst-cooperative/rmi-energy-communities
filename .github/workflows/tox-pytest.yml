@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: "3.10"
       fail-fast: false
     steps:
       - uses: actions/checkout@v3
@@ -23,7 +23,7 @@ jobs:
           mamba-version: "*"
           channels: conda-forge,defaults
           channel-priority: true
-          python-version: ["3.10"]
+          python-version: "3.10"
           activate-environment: energy_comms
           environment-file: environment.yml
       - shell: bash -l {0}

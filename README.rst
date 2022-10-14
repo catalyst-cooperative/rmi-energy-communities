@@ -41,6 +41,12 @@ based on the ``environment.yml`` file that is stored in the repo:
 .. code:: bash
 
    conda env create --name energy_comms --file environment.yml
+   
+To run the pre-commit hooks before you commit code run:
+
+.. code:: bash
+
+   pre-commit install
 
 Note that the software in this repository depends on
 `the dev branch <https://github.com/catalyst-cooperative/pudl/tree/dev>`__ of the

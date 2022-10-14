@@ -41,7 +41,7 @@ based on the ``environment.yml`` file that is stored in the repo:
 .. code:: bash
 
    conda env create --name energy_comms --file environment.yml
-   
+
 To run the pre-commit hooks before you commit code run:
 
 .. code:: bash

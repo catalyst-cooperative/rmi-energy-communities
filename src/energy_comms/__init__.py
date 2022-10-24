@@ -1,5 +1,6 @@
-"""A template repository for a Python package created by Catalyst Cooperative."""
+"""Identify energy communities as defined by the Inflation Reduction Act."""
 import logging
+from pathlib import Path
 
 import pkg_resources
 
@@ -15,9 +16,13 @@ __license__ = "MIT License"
 __maintainer_email__ = "pudl@catalyst.coop"
 __version__ = pkg_resources.get_distribution("catalystcoop.energy_comms").version
 __docformat__ = "restructuredtext en"
-__description__ = "A template for Python package repositories."
+__description__ = (
+    "Identifying energy communities as defined by the Inflation Reduction Act."
+)
 __long_description__ = """
-This should be a paragraph long description of what the package does.
+This repository is a collaboration between RMI and Catalyst Cooperative to
+identify and map the areas identified as energy communities by the
+Inflation Reduction Act. These communities are eligible for tax incentives.
 """
 __projecturl__ = "https://github.com/catalyst-cooperative/energy_comms"
 __downloadurl__ = "https://github.com/catalyst-cooperative/energy_comms"
@@ -25,3 +30,6 @@ __downloadurl__ = "https://github.com/catalyst-cooperative/energy_comms"
 # Create a root logger for use anywhere within the package.
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
+REPO_DIR = Path(__file__).resolve().parent.parent.parent
+INPUTS_DIR = REPO_DIR / "inputs"

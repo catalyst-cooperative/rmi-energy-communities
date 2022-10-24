@@ -113,7 +113,6 @@ repos:
       - id: mypy
         additional_dependencies:
           - pytest
-          - types-requests
           - types-jinja2
           - types-setuptools
         args: ["--strict"]

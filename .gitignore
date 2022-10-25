@@ -1,4 +1,6 @@
 RFF_energy_communities_script
+inputs/
+
 **/*.DS_Store*
 .vscode
 # Catalyst specific files

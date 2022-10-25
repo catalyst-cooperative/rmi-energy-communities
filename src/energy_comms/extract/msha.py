@@ -14,6 +14,7 @@ SOURCE_URL = "https://arlweb.msha.gov/OpenGovernmentData/DataSets/Mines.zip"
 
 def get_page() -> None:
     """Download mines zip file from MSHA site."""
+    # TODO: get metadata file as well
     r = requests.get(SOURCE_URL)
     if r.status_code != 200:
         raise HTTPError(

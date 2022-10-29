@@ -1,4 +1,4 @@
-"""Transform functions for the MSHA mine data."""
+"""Transform functions for the EIA 860 generators data."""
 from typing import Literal
 
 import geopandas
@@ -6,24 +6,29 @@ import pandas as pd
 
 import energy_comms
 
+# not including petcoke as coal generator
+COAL_CODES = ["ANT", "BIT", "LIG", "SUB", "SGC", "WC", "RC"]
+
 
 def transform(
     raw_df: pd.DataFrame, census_geometry: Literal["state", "county", "tract"] = "tract"
 ) -> pd.DataFrame:
-    """Standardize columns, filter for IRA coal mine criteria, join to census geometry."""
+    """Filter for coal plants meeting IRA criteria and join to Census geometry."""
     df = raw_df.copy()
-    df.columns = df.columns.str.lower()
-    df["current_status_dt"] = pd.to_datetime(df["current_status_dt"].astype("string"))
     # apply filters for IRA criteria
     mask = (
-        (df.current_mine_status.isin(["Abandoned and Sealed", "Abandoned"]))
-        & (df.coal_metal_ind == "C")
-        & (df.current_status_dt.dt.year >= 2000)
+        (df.operational_status == "retired")
+        & (
+            (df.energy_source_code_1.isin(COAL_CODES))
+            | (df.energy_source_code_2.isin(COAL_CODES))
+        )
+        & (df.retirement_date >= "2010-01-01")
         & ~(df.longitude.isnull())
         & ~(df.latitude.isnull())
     )
     df = df[mask]
-    # add geometry column to msha data
+
+    # add geometry column to data
     df = geopandas.GeoDataFrame(
         df, geometry=geopandas.points_from_xy(df.longitude, df.latitude)
     )

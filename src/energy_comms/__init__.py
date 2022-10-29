@@ -8,6 +8,7 @@ import pkg_resources
 # they need to be imported here somehow. Not sure if this is best practice though.
 import energy_comms.cli
 import energy_comms.dummy  # noqa: F401
+import energy_comms.helpers  # noqa: F401
 
 __author__ = "Catalyst Cooperative"
 __contact__ = "pudl@catalyst.coop"

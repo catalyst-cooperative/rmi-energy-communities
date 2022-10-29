@@ -29,21 +29,17 @@ def transform(raw_df: pd.DataFrame) -> pd.DataFrame:
         tract_df[["geometry", "geoid10", "namelsad10"]],
         how="left",
         predicate="intersects",
-    )
-    # TODO: get adjoining Census tracts
-    # do a join or use .touches to get list of all touching tracts for each record
-    # something like the below
-    """
-    adjacent_tracts = tract_df[["geometry", "geoid10", "namelsad10"]].sjoin(
-        tract_df[["geometry", "geoid10"]], how="left", predicate="touches"
-    )
-    adjacent_tracts = adjacent_tracts.join(
-        adjacent_tracts.groupby("geoid10_left")["geoid10_right"]
+    ).rename(columns={"namelsad10": "tract_name_census", "geoid10": "tract_id_fips"})
+    # get a list of adjacent Census tracts
+    idx = df.index_right.dropna().astype(int).unique()
+    adj_tracts_series = (
+        tract_df.iloc[idx]
+        .sjoin(tract_df[["geometry", "geoid10"]], how="left", predicate="touches")
+        .groupby("geoid10_left")["geoid10_right"]
         .apply(list)
-        .rename("adjacent_tracts"),
-        on="geoid10",
-        rsuffix="touching",
+        .rename("adjacent_tract_id_fips")
     )
-    """
+    # join the list of adjacent tracts FIPS ids onto the MSHA dataframe
+    df = df.join(adj_tracts_series, on="tract_id_fips")
 
     return df

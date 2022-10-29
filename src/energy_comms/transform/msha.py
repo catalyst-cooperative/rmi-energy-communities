@@ -1,11 +1,15 @@
 """Transform functions for the MSHA mine data."""
+from typing import Literal
+
 import geopandas
 import pandas as pd
 
-import pudl
+import energy_comms
 
 
-def transform(raw_df: pd.DataFrame) -> pd.DataFrame:
+def transform(
+    raw_df: pd.DataFrame, census_geometry: Literal["state", "county", "tract"] = "tract"
+) -> pd.DataFrame:
     """Standardize columns, filter for IRA coal mine criteria, join to census tract."""
     df = raw_df.copy()
     df.columns = df.columns.str.lower()
@@ -19,27 +23,19 @@ def transform(raw_df: pd.DataFrame) -> pd.DataFrame:
         & ~(df.latitude.isnull())
     )
     df = df[mask]
-    # get census tract geometries
-    tract_df = pudl.output.censusdp1tract.get_layer(layer="tract")
     # add geometry column to msha data
     df = geopandas.GeoDataFrame(
         df, geometry=geopandas.points_from_xy(df.longitude, df.latitude, crs=4269)
     )
-    df = df.sjoin(
-        tract_df[["geometry", "geoid10", "namelsad10"]],
-        how="left",
-        predicate="intersects",
-    ).rename(columns={"namelsad10": "tract_name_census", "geoid10": "tract_id_fips"})
-    # get a list of adjacent Census tracts
-    idx = df.index_right.dropna().astype(int).unique()
-    adj_tracts_series = (
-        tract_df.iloc[idx]
-        .sjoin(tract_df[["geometry", "geoid10"]], how="left", predicate="touches")
-        .groupby("geoid10_left")["geoid10_right"]
-        .apply(list)
-        .rename("adjacent_tract_id_fips")
+    # get intersection of mines with specified census geometry
+    df = energy_comms.helpers.get_geometry_intersection(
+        df, census_geometry=census_geometry
     )
-    # join the list of adjacent tracts FIPS ids onto the MSHA dataframe
-    df = df.join(adj_tracts_series, on="tract_id_fips")
+    # find adjacent census geometries to closed mines
+    df = energy_comms.helpers.get_adjacent_geometries(
+        df,
+        fips_column_name=f"{census_geometry}_id_fips",
+        census_geometry=census_geometry,
+    )
 
     return df

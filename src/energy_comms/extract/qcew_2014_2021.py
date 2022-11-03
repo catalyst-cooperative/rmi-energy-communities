@@ -14,7 +14,22 @@ INDUSTRY_YEARS = ['2014','2015','2016','2017','2018','2019','2020','2021']
 
 # qualifying fossil employment naics codes
 
-INDUSTRY_NAICS_CODES = ['2121','211','213','23712','486','4247','22112']
+FOSSIL_NAICS_CODES = ['2121','211','213','23712','486','4247','22112']
+
+# employment code for total employment figures
+
+TOTAL_EMPLOYMENT_NAICS_CODE = ['10']
+
+# group cols list based on fossil vs. total
+
+FOSSIL_GROUP_COLS = ['area_fips','area_title','geographic_level','industry_code','year']
+
+#total employment needs to be grouped by ownership code since they have a total already
+
+TOTAL_GROUP_COLS = ['area_fips','area_title','geographic_level','own_code','industry_code','year']
+
+#calling
+area = area.extract()
 
 
 # first chunk of data - from industry extraction provided by BLS sample code
@@ -29,11 +44,14 @@ def industry_extraction(year,naics_code):
 
 # extraction of all NAICS codes data for all geographies
 
-def get_2014_data():
+def get_2014_industry_data(key):
+
+    codes_dict = {'total':TOTAL_EMPLOYMENT_NAICS_CODE,'fossil': FOSSIL_NAICS_CODES}
+
     appended_df = []
 
     for year in INDUSTRY_YEARS:
-        for naics_code in INDUSTRY_NAICS_CODES:
+        for naics_code in codes_dict[key]:
             i = industry_extraction(year,naics_code)
             df = pd.DataFrame(i[1:],columns=i[0])
             appended_df.append(df)
@@ -42,15 +60,12 @@ def get_2014_data():
 
     return appended_df
 
-# function to clean and make wide to long
 
+# function to clean (remove quotation marks and make wide to long)
 
-def cleaning_2014_data():
+def get_cleaned_2014_industry_data(df):
     
-    df = get_2014_data()
-
-    area = area.extract()
-
+   
     # remove quotation marks in rows
     for i, col in enumerate(df.columns):
         df.iloc[:,i] = df.iloc[:,i].str.replace('"','')
@@ -62,18 +77,15 @@ def cleaning_2014_data():
 
     df_with_areas = df.merge(area,on='area_fips',how='left')
 
-    #melt to make variable identifier to merge other identifiers in later
-
-    final_df = df_with_areas.melt(id_vars=['area_fips','area_title','industry_code'],value_vars=['annual_avg_emplvl'],value_name='num_of_employees',var_name='variable')
-
-
-    return final_df
+    return df_with_areas
 
 
 # using BLS area codes, make a column indicating what geographic level the observation is in (county, statewide, MSA, etc) and state column
-def get_2014_with_bls_geographic_tag():
+def get_2014_industry_with_bls_geographic_tag(data):
     # potentially make df a parameter
-    data = get_2014_data()
+    
+
+    #make geographic level column for filtering and future aggregations
 
     data['geographic_level'] = np.where(data['area_title'].str.contains('Statewide'),'state',data['area_title'])
     data['geographic_level'] = np.where(data['area_title'].str.contains('Parish|City|Borough|County'),'county',data['geographic_level'])
@@ -91,9 +103,30 @@ def get_2014_with_bls_geographic_tag():
     data['state'] = np.where(data['state'].str.contains('MSA'),data['area_title'].str.split(',').str.get(1),data['state'])
 
 
-
     return data
 
-# make dataframe for total employment numbers
+# aggregate by data set type 
 
-#industry as 10, ownership as 0
+def aggregate_data_by_type(df,key):
+
+    # make the dictionary with key and list 
+    group_col_list = {'total': TOTAL_GROUP_COLS,'fossil': FOSSIL_GROUP_COLS}
+    
+
+    # drop none types from row before int conversion
+    df = df[df['annual_avg_emplvl']!= None]
+
+    df = df.dropna(subset=['annual_avg_emplvl'])
+
+    #all data types are strings right now, convert column we're gonna sum to a int
+    df['annual_avg_emplvl'] = df['annual_avg_emplvl'].astype(int)
+
+    grouped_df = df.groupby(group_col_list[key]).agg({'annual_avg_emplvl':'sum'}).reset_index()
+
+    # keep total column if group col list is total
+    
+    if group_col_list == TOTAL_GROUP_COLS:
+        return grouped_df.query("own_code == '0'") 
+        
+
+    return grouped_df

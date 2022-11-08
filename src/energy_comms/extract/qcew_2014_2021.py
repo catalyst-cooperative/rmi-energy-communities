@@ -130,3 +130,4 @@ def aggregate_data_by_type(df,key):
         
 
     return grouped_df
+

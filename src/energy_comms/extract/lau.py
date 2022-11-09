@@ -4,8 +4,8 @@ import requests
 
 LAU_URL = f'https://download.bls.gov/pub/time.series/la/'
 
-FILE_NAMES = ['la.area','la.data.0.CurrentU10-14','la.data.0.CurrentU15-19','la.data.0.CurrentU20-24']
 
+FILE_NAMES = ['la.area','la.data.0.CurrentU10-14','la.data.0.CurrentU15-19','la.data.0.CurrentU20-24']
 def extract_lau():
     for file in FILE_NAMES:
         downloads = LAU_URL+file

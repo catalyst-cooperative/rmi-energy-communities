@@ -23,6 +23,7 @@ def transform(
         & ~(df.latitude.isnull())
     )
     df = df[mask]
+    # impute census tracts of missing lat, lon points?
     # add geometry column to msha data
     df = geopandas.GeoDataFrame(
         df, geometry=geopandas.points_from_xy(df.longitude, df.latitude)

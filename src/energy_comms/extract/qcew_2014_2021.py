@@ -125,7 +125,7 @@ def aggregate_data_by_type(df,key):
 
     # keep total column if group col list is total
     
-    if group_col_list == TOTAL_GROUP_COLS:
+    if key == 'total':
         return grouped_df.query("own_code == '0'") 
         
 

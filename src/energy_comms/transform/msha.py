@@ -16,7 +16,11 @@ def transform(
     df["current_status_dt"] = pd.to_datetime(df["current_status_dt"].astype("string"))
     # apply filters for IRA criteria
     mask = (
-        (df.current_mine_status.isin(["Abandoned and Sealed", "Abandoned"]))
+        (
+            df.current_mine_status.isin(
+                ["Abandoned and Sealed", "Abandoned", "NonProducing"]
+            )
+        )
         & (df.coal_metal_ind == "C")
         & (df.current_status_dt.dt.year >= 2000)
         & ~(df.longitude.isnull())

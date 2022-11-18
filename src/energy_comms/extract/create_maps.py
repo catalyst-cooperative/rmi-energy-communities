@@ -45,9 +45,10 @@ def shapefile_to_json(link):
 
     return geodf
 
+
 """Function to create chloropleth plotly map from json """
 
-def make_map_from_json(df,filename):
+def make_map_from_json(df,df2,filename):
     
     fig = px.choropleth_mapbox(df,geojson=df.geometry,
         locations=df.index,
@@ -56,13 +57,22 @@ def make_map_from_json(df,filename):
         zoom=9,
         hover_name="NAME")
 
+    fig.add_scattermapbox(lat=df2.Latitude,lon=df2.Longitude,mode='markers+text',text=df2['Site Name'],marker_size=2,
+    marker_color='rgb(235, 0, 100)'
+    )
+
     fig.update_layout(
         title = 'Qualifying Energy Community Areas - Employment Criteria',
         height=1000,
         autosize=True,
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
-        geo_scope='usa'
+        geo_scope='usa',
     )
+
+    fig.update_traces(name='brownfield site', selector=dict(type='scattermapbox'))
+
+    fig.update_traces(name='fossil employment area', selector=dict(type='choroplethmapbox'))
+
 
     fig.show()
 

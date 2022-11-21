@@ -1606,9 +1606,9 @@
 25410,"College Station-Bryan, TX MSA",metropolitan_stat_area,Texas,"College Station-Bryan, TX",17780,0.5085122460772548,1,5.4,3.7,1
 25411,"College Station-Bryan, TX MSA",metropolitan_stat_area,Texas,"College Station-Bryan, TX",17780,0.5085122460772548,1,5.4,3.7,1
 25412,"College Station-Bryan, TX MSA",metropolitan_stat_area,Texas,"College Station-Bryan, TX",17780,0.5085122460772548,1,5.4,3.7,1
-25431,"Scranton-Wilkes-Barre-Hazleton, PA MSA",metropolitan_stat_area,Pennsylvania,"Scranton--Wilkes-Barre--Hazleton, PA",42540,0.17492758158606359,1,6.3,6.2,1
-25432,"Scranton-Wilkes-Barre-Hazleton, PA MSA",metropolitan_stat_area,Pennsylvania,"Scranton--Wilkes-Barre--Hazleton, PA",42540,0.17492758158606359,1,6.3,6.2,1
-25433,"Scranton-Wilkes-Barre-Hazleton, PA MSA",metropolitan_stat_area,Pennsylvania,"Scranton--Wilkes-Barre--Hazleton, PA",42540,0.17492758158606359,1,6.3,6.2,1
+25431,"Scranton--Wilkes-Barre--Hazleton, PA MSA",metropolitan_stat_area,Pennsylvania,"Scranton--Wilkes-Barre--Hazleton, PA",42540,0.17492758158606359,1,6.3,6.2,1
+25432,"Scranton--Wilkes-Barre--Hazleton, PA MSA",metropolitan_stat_area,Pennsylvania,"Scranton--Wilkes-Barre--Hazleton, PA",42540,0.17492758158606359,1,6.3,6.2,1
+25433,"Scranton--Wilkes-Barre--Hazleton, PA MSA",metropolitan_stat_area,Pennsylvania,"Scranton--Wilkes-Barre--Hazleton, PA",42540,0.17492758158606359,1,6.3,6.2,1
 25476,"Bell County, Kentucky",county,Kentucky,East Kentucky nonmetropolitan area,21013,8.987129266927813,1,12.3,9.3,1
 25480,"Bell County, Kentucky",county,Kentucky,East Kentucky nonmetropolitan area,21013,6.986444212721585,1,10.1,7.4,1
 25481,"Bell County, Kentucky",county,Kentucky,East Kentucky nonmetropolitan area,21013,4.937979917306556,1,8.5,6.2,1
@@ -1707,20 +1707,20 @@
 26515,"Leslie County, Kentucky",county,Kentucky,East Kentucky nonmetropolitan area,21131,8.333333333333332,1,9.9,4.9,1
 26516,"Leslie County, Kentucky",county,Kentucky,East Kentucky nonmetropolitan area,21131,9.119300437226734,1,6.9,4.4,1
 26517,"Leslie County, Kentucky",county,Kentucky,East Kentucky nonmetropolitan area,21131,8.177278401997503,1,7.8,3.9,1
-26672,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26673,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26674,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26675,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26676,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26677,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26678,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26679,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26680,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26681,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26682,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26683,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26684,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
-26685,"Nashville-Davidson-Murfreesboro-Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26672,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26673,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26674,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26675,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26676,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26677,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26678,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26679,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26680,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26681,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26682,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26683,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26684,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
+26685,"Nashville-Davidson--Murfreesboro--Franklin, TN MSA",metropolitan_stat_area,Tennessee,"Nashville-Davidson--Murfreesboro--Franklin, TN",34980,0.203554405498919,1,7.0,3.7,1
 26700,"Tuscarawas County, Ohio",county,Ohio,Eastern Ohio nonmetropolitan area,39157,0.5930451972324557,1,11.3,9.3,1
 26706,"Tuscarawas County, Ohio",county,Ohio,Eastern Ohio nonmetropolitan area,39157,2.733203049737139,1,5.8,5.3,1
 26707,"Tuscarawas County, Ohio",county,Ohio,Eastern Ohio nonmetropolitan area,39157,4.0778849010235225,1,5.0,4.9,1
@@ -2143,11 +2143,11 @@
 35396,"Houma-Thibodaux, LA MSA",metropolitan_stat_area,Louisiana,"Houma-Thibodaux, LA",26380,0.5831014419428283,1,7.6,3.7,1
 35397,"Houma-Thibodaux, LA MSA",metropolitan_stat_area,Louisiana,"Houma-Thibodaux, LA",26380,0.5831014419428283,1,7.6,3.7,1
 35688,"Mckean County, Pennsylvania",county,Pennsylvania,Northern Pennsylvania nonmetropolitan area,42083,4.17355897696908,1,9.8,9.3,1
-35694,"McKean County, Pennsylvania",county,Pennsylvania,Northern Pennsylvania nonmetropolitan area,42083,3.823162320173422,1,6.5,5.3,1
-35695,"McKean County, Pennsylvania",county,Pennsylvania,Northern Pennsylvania nonmetropolitan area,42083,4.078529878371232,1,6.2,4.9,1
-35696,"McKean County, Pennsylvania",county,Pennsylvania,Northern Pennsylvania nonmetropolitan area,42083,4.62481059358324,1,5.0,4.4,1
-35697,"McKean County, Pennsylvania",county,Pennsylvania,Northern Pennsylvania nonmetropolitan area,42083,2.455372409547911,1,5.4,3.9,1
-35698,"McKean County, Pennsylvania",county,Pennsylvania,Northern Pennsylvania nonmetropolitan area,42083,2.1296978629329404,1,9.8,3.7,1
+35694,"Mckean County, Pennsylvania",county,Pennsylvania,Northern Pennsylvania nonmetropolitan area,42083,3.823162320173422,1,6.5,5.3,1
+35695,"Mckean County, Pennsylvania",county,Pennsylvania,Northern Pennsylvania nonmetropolitan area,42083,4.078529878371232,1,6.2,4.9,1
+35696,"Mckean County, Pennsylvania",county,Pennsylvania,Northern Pennsylvania nonmetropolitan area,42083,4.62481059358324,1,5.0,4.4,1
+35697,"Mckean County, Pennsylvania",county,Pennsylvania,Northern Pennsylvania nonmetropolitan area,42083,2.455372409547911,1,5.4,3.9,1
+35698,"Mckean County, Pennsylvania",county,Pennsylvania,Northern Pennsylvania nonmetropolitan area,42083,2.1296978629329404,1,9.8,3.7,1
 35796,"Montgomery, AL MSA",metropolitan_stat_area,Alabama,"Montgomery, AL",33860,0.3306390117431752,1,5.5,5.3,1
 35797,"Montgomery, AL MSA",metropolitan_stat_area,Alabama,"Montgomery, AL",33860,0.3306390117431752,1,5.5,5.3,1
 35798,"Montgomery, AL MSA",metropolitan_stat_area,Alabama,"Montgomery, AL",33860,0.3306390117431752,1,5.5,5.3,1

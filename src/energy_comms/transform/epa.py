@@ -24,6 +24,6 @@ def transform(df):
 
     df = df.drop(columns="zip")
 
-    df = df.rename(columns={'site_name':'area_name'})
+    df = df.rename(columns={"site_name": "area_name"})
 
     return df

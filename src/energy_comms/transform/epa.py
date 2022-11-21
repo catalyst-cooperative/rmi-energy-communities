@@ -22,7 +22,7 @@ def transform(df):
 
     df["fips_county"] = df["zip"].map(zip_crosswalk)
 
-    df = df.drop(columns="zip")
+    df = df.drop(columns=["zip","state"])
 
     df = df.rename(columns={'site_name':'area_name'})
 

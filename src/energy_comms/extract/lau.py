@@ -15,8 +15,6 @@ def extract_lau():
         output.write(resp.content,)
         output.close()
 
-def get_lau_areas():
-
     df_areas = pd.read_table('la.area.txt')
     # only keep columns we want
     df_areas = df_areas[['area_code','area_text']]
@@ -38,14 +36,14 @@ def get_lau_areas():
     df_areas['series_id'] = df_areas['series_id'] + '03'
     
     return df_areas
-
     
 # let's use an example
 def get_lau_data(lau_file):
+
+    df_areas = extract_lau()
+
     df_bls = pd.read_table(lau_file)
-
-    df_areas = get_lau_areas()
-
+  
     df_bls.columns = df_bls.columns.str.replace(' ','')
 
     df_bls['series_id'] = df_bls['series_id'].str.replace(' ','')
@@ -59,3 +57,26 @@ def get_lau_data(lau_file):
 
     return df 
 
+def get_data():
+    
+    years = ['2010','2015','2020']
+
+    my_dict = {}
+
+    for year in years:
+
+        year_file_combination = {'2010':'la.data.0.CurrentU10-14.txt','2015':'la.data.0.CurrentU15-19.txt','2020':'la.data.0.CurrentU20-24.txt'}
+
+        
+        #for file in files:
+        my_dict['df_' + year] = get_lau_data(year_file_combination[year])
+    
+    df = pd.concat(my_dict.values())
+    
+    df = df.rename(columns={'value':'local_area_unemployment'})
+
+    lau_df = df[['area_text','geographic_level','state_code','geoid','year','local_area_unemployment']]
+
+    lau_df
+
+    return lau_df

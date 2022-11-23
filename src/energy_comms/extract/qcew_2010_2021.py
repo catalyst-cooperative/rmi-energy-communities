@@ -79,5 +79,5 @@ def extract_2010():
 
     df = pd.concat(data_dfs,ignore_index=True)
 
-
+    
     return df

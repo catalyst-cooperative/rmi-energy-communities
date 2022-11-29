@@ -1,6 +1,6 @@
 """Identify energy communities as defined by the Inflation Reduction Act."""
+
 import logging
-from pathlib import Path
 
 import pkg_resources
 
@@ -8,7 +8,11 @@ import pkg_resources
 # they need to be imported here somehow. Not sure if this is best practice though.
 import energy_comms.cli
 import energy_comms.dummy  # noqa: F401
-import energy_comms.helpers  # noqa: F401
+import energy_comms.extract.eia860
+import energy_comms.extract.msha
+import energy_comms.helpers
+import energy_comms.transform.eia860
+import energy_comms.transform.msha  # noqa: F401
 
 __author__ = "Catalyst Cooperative"
 __contact__ = "pudl@catalyst.coop"
@@ -31,6 +35,3 @@ __downloadurl__ = "https://github.com/catalyst-cooperative/energy_comms"
 # Create a root logger for use anywhere within the package.
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
-
-REPO_DIR = Path(__file__).resolve().parent.parent.parent
-INPUTS_DIR = REPO_DIR / "inputs"

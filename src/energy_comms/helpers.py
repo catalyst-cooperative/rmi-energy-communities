@@ -38,7 +38,10 @@ def get_geometry_intersection(
             at the ``census_geometry`` level that are adjacent to the record
 
     Returns:
-        geopandas.GeoDataFrame
+        geopandas.GeoDataFrame: GeoDataFrame with columns added for FIPS ID at the
+            ``census_geometry`` level and the name of the geometry e.g. Census Tract 58
+            or Springfield County. If ``add_adjacent_geoms`` is True the column
+            ``adjacent_id_fips`` is added, giving a list of geometries adjacent to the record.
     """
     logger.info("Finding intersecting Census geometries.")
     col_names = {
@@ -81,10 +84,11 @@ def get_adjacent_geometries(
 ) -> geopandas.GeoDataFrame:
     """Find the Census geometries adjacent to each record in ``df``.
 
-    Adds a column with a list of all the geometries specified by
-    ``census_geometry`` that are adjacent to the geometry of a record
-    in ``df``. Should likely be used after ``get_geometry_intersections``
-    to get adjacent geometries in coal communities analysis.
+    Adds a column, ``adjacent_id_fips`` with a list of all the geometries
+    specified by ``census_geometry`` that are adjacent to the geometry
+    of a record in ``df``. Should likely be used after
+    ``get_geometry_intersections`` to get adjacent geometries in coal
+    communities analysis.
 
     Args:
         df (geopandas.GeoDataFrame): The dataframe with records to find
@@ -103,6 +107,7 @@ def get_adjacent_geometries(
         census_df (pd.DataFrame): The dataframe of Census geometries. If None
             (the default), this dataframe is generated from
             ``pudl.output.censusdp1tract.get_layer()``
+
     """
     logger.info("Finding adjacent Census geometries.")
     if census_df is None:

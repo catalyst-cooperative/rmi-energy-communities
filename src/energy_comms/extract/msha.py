@@ -24,8 +24,15 @@ def get_page() -> None:
         raise HTTPError(
             f"Bad response from Mine Data Retrieval System. Status code: {r.status_code}"
         )
-    z = zipfile.ZipFile(io.BytesIO(r.content))
-    z.extractall(energy_comms.INPUTS_DIR / "msha")
+    with zipfile.ZipFile(io.BytesIO(r.content)) as z:
+        info = z.infolist()
+        if len(info) != 1:
+            raise ValueError(
+                f"ZIP file from mines URL contains {len(info)} files, should only have 1."
+            )
+        if info[0].filename == "Mines.txt":
+            raise AssertionError(f"Filename is {info[0].filename}, expected Mines.txt")
+        z.extractall(energy_comms.INPUTS_DIR / "msha")
 
     m = requests.get(METADATA_URL)
     if m.status_code != 200:
@@ -38,8 +45,10 @@ def get_page() -> None:
 
 def extract(
     txt_file_path: pathlib.Path = energy_comms.INPUTS_DIR / "msha/Mines.txt",
+    fresh_download: bool = True,
 ) -> pd.DataFrame:
     """Extract MSHA mines data from downloaded txt file."""
-    get_page()
+    if fresh_download or not pathlib.Path(txt_file_path).is_file():
+        get_page()
     out = pd.read_csv(txt_file_path, sep="|", encoding="latin_1")
     return out

@@ -21,11 +21,18 @@ def transform(
     df = raw_df.copy()
     df.columns = df.columns.str.lower()
     df["current_status_dt"] = pd.to_datetime(df["current_status_dt"].astype("string"))
-    df = strip_lower_str_cols(df, ["current_mine_status", "coal_metal_ind"])
-    df["current_mine_name"] = (
-        df["current_mine_name"].astype("string").str.strip().str.title()
+    df = df.astype(
+        {
+            "mine_id": "int",
+            "current_mine_name": "string",
+            "current_mine_status": "string",
+            "coal_metal_ind": "category",
+            "fips_cnty_cd": "string",
+        }
     )
-    df["fips_cnty_cd"] = df["fips_cnty_cd"].astype("string").str.rjust(3, "0")
+    df = strip_lower_str_cols(df, ["current_mine_status", "coal_metal_ind"])
+    df["current_mine_name"] = df["current_mine_name"].str.strip().str.title()
+    df["fips_cnty_cd"] = df["fips_cnty_cd"].str.rjust(3, "0")
     df = df.dropna(subset=["latitude", "longitude"])
     # apply filters for IRA criteria
     mask = (

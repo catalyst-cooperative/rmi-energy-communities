@@ -1,6 +1,7 @@
 """Unit tests for the energy_comms.helpers module."""
 
 import logging
+import pathlib
 
 import geopandas
 import pandas as pd
@@ -19,7 +20,7 @@ def _check_adjacent_id_fips(actual_ser: pd.Series, expected_ser: pd.Series) -> N
         raise AssertionError("Actual adjacent_id_fips column doesn't match expected.")
 
 
-def test_geometry_intersections() -> None:
+def test_geometry_intersections(test_dir: pathlib.Path) -> None:
     """Test if geometry intersection helper functions work correctly.
 
     Performs test on one record and adds geometries at the Census
@@ -45,9 +46,7 @@ def test_geometry_intersections() -> None:
         crs="EPSG:4269",
     )
 
-    census_gdf = pd.read_pickle(
-        energy_comms.TEST_DIR / "test_inputs/utah_census_tracts_gdf.pkl.gz"
-    )
+    census_gdf = pd.read_pickle(test_dir / "test_inputs/utah_census_tracts_gdf.pkl.gz")
 
     expected_gdf = geopandas.GeoDataFrame(
         [

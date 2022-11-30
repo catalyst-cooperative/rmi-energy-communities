@@ -20,14 +20,14 @@ def download_all(yrs):
     if not CACHE_DIR.exists():
         CACHE_DIR.mkdir(parents=True)
     
-        for yr in yrs:
-            file_save_path = CACHE_DIR / f"{yr}_annual_by_area.zip"
+    for yr in yrs:
+        file_save_path = CACHE_DIR / f"{yr}_annual_by_area.zip"
 
-            if not file_save_path.exists:
-            
-                url = f'https://data.bls.gov/cew/data/files/{yr}/csv/{yr}_annual_by_area.zip'
-                with file_save_path.open("wb") as f:
-                    f.write(requests.get(url, allow_redirects=True, timeout=10).content)
+        if not file_save_path.exists():
+        
+            url = f'https://data.bls.gov/cew/data/files/{yr}/csv/{yr}_annual_by_area.zip'
+            with file_save_path.open("wb") as f:
+                f.write(requests.get(url, allow_redirects=True, timeout=10).content)
 
 """
 

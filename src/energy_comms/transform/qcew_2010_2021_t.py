@@ -69,13 +69,10 @@ def transform(df):
  
     #create eligibility criteria # 2) unemployment rate higher than previous years
 
-
     national_unemployment = cps_transform(cps_extract())
-
     local_unemployment = lau_extract()
 
     #get final unemployment data
-
     unemployment = local_unemployment.merge(national_unemployment,on='year',how='left')
 
     # make column a float for comparison
@@ -85,24 +82,27 @@ def transform(df):
 
     unemployment['geoid'] = np.where(unemployment['geographic_level']=='county',unemployment['state_code'] + unemployment['geoid'],unemployment['geoid'].str[0:5])
 
-    employment_both = employment.merge(unemployment,on=['geoid','geographic_level','year'],how='inner')
-    employment_both['meets_unemployment_criteria'] = np.where(employment_both['local_area_unemployment'] > employment_both['national_unemployment_rate_prev_year'],1,0)
+    """
+        employment_both = employment.merge(unemployment,on=['geoid','geographic_level','year'],how='inner')
+        employment_both['meets_unemployment_criteria'] = np.where(employment_both['local_area_unemployment'] > employment_both['national_unemployment_rate_prev_year'],1,0)
 
-    #identify which areas meet the unemployment criteria
+        #identify which areas meet the unemployment criteria
 
-    eligible_employment_areas = employment_both.query("meets_fossil_threshold==1 & meets_unemployment_criteria==1")
+        eligible_employment_areas = employment_both.query("meets_fossil_threshold==1 & meets_unemployment_criteria==1")
 
-    # clean for export
-    eligible_employment_areas = eligible_employment_areas.rename(columns={'May 2021 MSA name':'msa_name'})
-    eligible_employment_areas = eligible_employment_areas[['area_title','geographic_level','State','msa_name','geoid','percent_fossil_employees','meets_fossil_threshold','local_area_unemployment','national_unemployment_rate_prev_year','meets_unemployment_criteria','fips_county']]
+        # clean for export
+        eligible_employment_areas = eligible_employment_areas.rename(columns={'May 2021 MSA name':'msa_name'})
+        eligible_employment_areas = eligible_employment_areas[['area_title','geographic_level','State','msa_name','geoid','percent_fossil_employees','meets_fossil_threshold','local_area_unemployment','national_unemployment_rate_prev_year','meets_unemployment_criteria','fips_county']]
 
-    #narrow exmport for patio
+        #narrow exmport for patio
 
-    patio_employment = eligible_employment_areas[['area_title','fips_county']]
+        patio_employment = eligible_employment_areas[['area_title','fips_county']]
 
-    # columns in patio
-    patio_employment['qualifying_area'] = 'msa_or_county'
+        # columns in patio
+        patio_employment['qualifying_area'] = 'msa_or_county'
 
-    patio_employment['criteria'] = 'fossil_employment'
+        patio_employment['criteria'] = 'fossil_employment'
 
-    return patio_employment
+        """
+
+    return unemployment

@@ -1,26 +1,40 @@
 #import dispatch
 import pandas as pd
-import qcew_2014_2021
-from qcew_2014_2021 import *
+#import qcew_2014_2021
+#from qcew_2014_2021 import *
 from pathlib import Path
 import io
 import glob
 import os
-
+import requests, zipfile
+from io import BytesIO
 
 
 """Function that downloads zip file through an online URL"""
 
 old_years = ['2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021']
+CACHE_DIR = Path.home() / 'Documents/qcew_cache'
 
+
+def download_all(yrs):
+    if not CACHE_DIR.exists():
+        CACHE_DIR.mkdir(parents=True)
+    
+        for yr in yrs:
+            file_save_path = CACHE_DIR / f"{yr}_annual_by_area.zip"
+
+            if not file_save_path.exists:
+            
+                url = f'https://data.bls.gov/cew/data/files/{yr}/csv/{yr}_annual_by_area.zip'
+                with file_save_path.open("wb") as f:
+                    f.write(requests.get(url, allow_redirects=True, timeout=10).content)
+
+"""
 
 def download_qcew_zip_files(yr):
-    import requests, zipfile
-    from io import BytesIO
+   
    
     print('Downloading started')
-
-    #only did one year, didn't work
 
         #Defining the zip file URL
     url = f'https://data.bls.gov/cew/data/files/{yr}/csv/{yr}_annual_by_area.zip'
@@ -36,7 +50,18 @@ def download_qcew_zip_files(yr):
     zipfile= zipfile.ZipFile(BytesIO(req.content))
     zipfile.extractall('/Users/mcastillo/Documents/qcew/')
 
+
+"""
+
 """Attempt to make directory into a large dataframe"""
+
+def make_year_df_2(yr):
+    #things_we_want = ("County", "MSA")
+    with zipfile.ZipFile(CACHE_DIR / f"{yr}_annual_by_area.zip") as z:
+        dfs = [pd.read_csv(BytesIO(z.read(x))) for x in z.namelist() if "County" in x or "MSA" in x]
+    return pd.concat(dfs, ignore_index=True)
+
+""""
 
 def make_year_df(yr):
 
@@ -81,3 +106,5 @@ def extract_2010():
 
     
     return df
+
+"""

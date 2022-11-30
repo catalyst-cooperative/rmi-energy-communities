@@ -1,5 +1,5 @@
 """Transform functions for the MSHA mine data."""
-from typing import Literal
+from typing import Any, Literal
 
 import geopandas
 import pandas as pd
@@ -15,9 +15,20 @@ def strip_lower_str_cols(df: pd.DataFrame, str_cols: list[str]) -> pd.DataFrame:
 
 
 def transform(
-    raw_df: pd.DataFrame, census_geometry: Literal["state", "county", "tract"] = "tract"
+    raw_df: pd.DataFrame,
+    census_geometry: Literal["state", "county", "tract"] = "tract",
+    pudl_settings: dict[Any, Any] | None = None,
 ) -> pd.DataFrame:
-    """Standardize columns, filter for IRA coal mine criteria, join to census geometry."""
+    """Standardize columns, filter for IRA coal mine criteria, join to census geometry.
+
+    Arguments:
+        raw_df (pd.DataFrame): Raw MSHA mines dataframe
+        census_geometry (str): Which set of Census geometries to read, must be one
+            of "state", "county", or "tract".
+        pudl_settings (dict or None): A dictionary of PUDL settings, including
+            paths to various resources like the Census DP1 SQLite database. If
+            None, the user defaults are used.
+    """
     df = raw_df.copy()
     df.columns = df.columns.str.lower()
     df["current_status_dt"] = pd.to_datetime(df["current_status_dt"].astype("string"))
@@ -52,7 +63,10 @@ def transform(
     )
     # get intersection of mines with specified census geometry
     df = energy_comms.helpers.get_geometry_intersection(
-        df, census_geometry=census_geometry, add_adjacent_geoms=True
+        df,
+        census_geometry=census_geometry,
+        add_adjacent_geoms=True,
+        pudl_settings=pudl_settings,
     )
 
     return df

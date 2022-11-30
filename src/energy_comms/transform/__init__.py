@@ -7,3 +7,5 @@ produced by the corresponding data source specific routines from the
 :class:`pandas.DataFrame` objects that are cleaned and ready to be used in mapping the
 IRA energy communities criteria.
 """
+
+from energy_comms.transform import eia860, msha  # noqa: F401

@@ -3,8 +3,8 @@
 import pandas as pd
 import numpy as np
 
-import qcew_python_3x_example as qcew
-from qcew_python_3x_example import qcewGetIndustryData as industry
+#import qcew_python_3x_example as qcew
+#from qcew_python_3x_example import qcewGetIndustryData as industry
 
 import qcew_area_titles as area
 
@@ -29,7 +29,7 @@ FOSSIL_GROUP_COLS = ['area_fips','area_title','geographic_level','industry_code'
 TOTAL_GROUP_COLS = ['area_fips','area_title','geographic_level','own_code','industry_code','year']
 
 #calling
-area = area.extract()
+#area = area.extract()
 
 
 # first chunk of data - from industry extraction provided by BLS sample code

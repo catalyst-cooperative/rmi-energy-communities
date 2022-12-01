@@ -1,6 +1,6 @@
 """Transform functions for the EIA 860 generators data."""
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 import geopandas
 import pandas as pd
@@ -15,6 +15,7 @@ def transform(
     raw_df: pd.DataFrame,
     census_geometry: Literal["state", "county", "tract"] = "tract",
     get_proposed_retirements: bool = False,
+    pudl_settings: dict[Any, Any] | None = None,
 ) -> pd.DataFrame:
     """Filter for coal plants meeting IRA criteria and join to Census geometry.
 
@@ -24,6 +25,9 @@ def transform(
             closures to.
         get_proposed_retirements (boolean): Whether to filter for just generators
             that are planned to be retired in the future. Default is False.
+        pudl_settings (dict or None): A dictionary of PUDL settings, including
+            paths to various resources like the Census DP1 SQLite database. If
+            None, the user defaults are used.
     """
     df = raw_df.copy()
     # apply filters for IRA criteria
@@ -64,13 +68,10 @@ def transform(
     )
     # get intersection with specified census geometry
     df = energy_comms.helpers.get_geometry_intersection(
-        df, census_geometry=census_geometry
-    )
-    # find adjacent census geometries
-    df = energy_comms.helpers.get_adjacent_geometries(
         df,
-        fips_column_name=f"{census_geometry}_id_fips",
         census_geometry=census_geometry,
+        add_adjacent_geoms=True,
+        pudl_settings=pudl_settings,
     )
 
     return df

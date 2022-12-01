@@ -1,10 +1,13 @@
 """PyTest configuration module. Defines useful fixtures, command line args."""
+from __future__ import annotations
+
 import logging
 import os
 from pathlib import Path
 from typing import Any
 
 import pytest
+import sqlalchemy as sa
 
 import pudl
 
@@ -65,6 +68,19 @@ def pudl_settings_fixture() -> Any:  # noqa: C901
 
     logger.info("pudl_settings being used: %s", pudl_settings)
     return pudl_settings
+
+
+@pytest.fixture(scope="session")
+def pudl_engine_fixture(pudl_settings_fixture: dict[Any, Any]) -> sa.engine.Engine:
+    """Grab a connection to the PUDL Database.
+
+    If we are using the test database, we initialize the PUDL DB from scratch.
+    If we're using the live database, then we just make a conneciton to it.
+    """
+    logger.info("setting up the pudl_engine fixture")
+    engine = sa.create_engine(pudl_settings_fixture["pudl_db"])
+    logger.info("PUDL Engine: %s", engine)
+    return engine
 
 
 @pytest.fixture(scope="session")

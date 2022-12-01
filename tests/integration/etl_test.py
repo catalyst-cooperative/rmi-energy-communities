@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 )
 def test_msha_etl(
     census_res: Literal["state", "county", "tract"],
-    pudl_settings_fixure: dict[str, str] | None,
+    pudl_settings_fixture: dict[str, str] | None,
 ) -> None:
     """Verify that we can ETL the MSHA data."""
     raw_df = energy_comms.extract.msha.extract()
@@ -24,7 +24,7 @@ def test_msha_etl(
         raise AssertionError("MSHA extract returned empty dataframe.")
     logger.info(f"Running transform at {census_res} level.")
     df = energy_comms.transform.msha.transform(
-        raw_df, census_geometry=census_res, pudl_settings=pudl_settings_fixure
+        raw_df, census_geometry=census_res, pudl_settings=pudl_settings_fixture
     )
     if df.empty:
         raise AssertionError("MSHA transform returned empty dataframe.")

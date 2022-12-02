@@ -455,13 +455,13 @@
                <gfc:cardinality gco:nilReason="unknown"/>
                <gfc:definitionReference xlink:title="U.S. Census Bureau"
                                         xlink:href="http://www.ngdc.noaa.gov/docucomp/eb139e38-ee29-4d59-b157-5e874d4420c4"/>
-               <!--Do the following to convert from decimal degrees to degree minutes and seconds 
+               <!--Do the following to convert from decimal degrees to degree minutes and seconds
                                             1. The whole units of degrees will remain the same
-                                            2. Multiply the decimal by 60 
-                                            3. The whole number becomes the minutes 
+                                            2. Multiply the decimal by 60
+                                            3. The whole number becomes the minutes
                                             4. Take the remaining decimal and multiply by 60
                                             5. The resulting number becomes the seconds  Seconds can remain as a decimal.
-                                            6. Take your three sets of numbers and put them together, using the symbols for degrees  minutes  and seconds 
+                                            6. Take your three sets of numbers and put them together, using the symbols for degrees  minutes  and seconds
                                         --><gfc:valueMeasurementUnit>
                   <gml:BaseUnit gml:id="INTPTLAT">
                      <gml:identifier codeSpace="INTPTLAT">Decimal degrees</gml:identifier>
@@ -490,13 +490,13 @@
                <gfc:cardinality gco:nilReason="unknown"/>
                <gfc:definitionReference xlink:title="U.S. Census Bureau"
                                         xlink:href="http://www.ngdc.noaa.gov/docucomp/eb139e38-ee29-4d59-b157-5e874d4420c4"/>
-               <!--Do the following to convert from decimal degrees to degree minutes and seconds 
+               <!--Do the following to convert from decimal degrees to degree minutes and seconds
                                             1. The whole units of degrees will remain the same
-                                            2. Multiply the decimal by 60 
-                                            3. The whole number becomes the minutes 
+                                            2. Multiply the decimal by 60
+                                            3. The whole number becomes the minutes
                                             4. Take the remaining decimal and multiply by 60
                                             5. The resulting number becomes the seconds  Seconds can remain as a decimal.
-                                            6. Take your three sets of numbers and put them together, using the symbols for degrees  minutes  and seconds 
+                                            6. Take your three sets of numbers and put them together, using the symbols for degrees  minutes  and seconds
                                         --><gfc:valueMeasurementUnit>
                   <gml:BaseUnit gml:id="INTPTLON">
                      <gml:identifier codeSpace="INTPTLON">Decimal degrees</gml:identifier>

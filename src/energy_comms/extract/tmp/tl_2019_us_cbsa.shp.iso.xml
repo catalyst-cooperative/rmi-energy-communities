@@ -94,7 +94,7 @@ dataset
                      </gmd:dateType>
                   </gmd:CI_Date>
                </gmd:date>
-           
+
                   <gmd:edition>
                   <gco:CharacterString>2019</gco:CharacterString>
                </gmd:edition>

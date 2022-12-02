@@ -49,8 +49,8 @@ jobs:
 
       - name: Log SQLite3 version
         run: |
-          conda run -n pudl-rmi which sqlite3
-          conda run -n pudl-rmi sqlite3 --version
+          conda run -n energy_comms which sqlite3
+          conda run -n energy_comms sqlite3 --version
 
       - name: Run PyTest with Tox
         run: |

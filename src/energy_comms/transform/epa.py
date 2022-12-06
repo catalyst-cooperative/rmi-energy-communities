@@ -5,25 +5,33 @@ def transform(df):
 
     # from HUD: https://www.huduser.gov/portal/datasets/usps_crosswalk.html
 
+    #make lower case and replace spaces
+    df.columns = df.columns.str.lower().str.replace(" ", "_")
+
+    #assign dtypes
+    df = df.astype({"site_name": str, "state": str, "latitude": float, "longitude": float})
+
+    # only keep columns we want
+
+    df = df[["site_name", "zip_code", "latitude", "longitude", "state"]]
+    # read in zip code cross walk from HUD
+
     zip_code_crosswalk = pd.read_excel(
-        "/Users/mcastillo/Documents/GitHub/rmi-energy-communities/src/energy_comms/extract/ZIP_COUNTY_122021.xlsx",
+        "https://www.huduser.gov/portal/datasets/usps/ZIP_COUNTY_122021.xlsx",
         dtype={"zip": str, "county": str},
     )
 
     zip_crosswalk = dict(zip(zip_code_crosswalk["zip"], zip_code_crosswalk["county"]))
 
-    df = df.rename(columns={"Site Name": "site_name", "Zip Code": "zip"})
+    # fill in criteria for patio and map crosswalk
 
-    df.columns = df.columns.str.lower()
+    df = df.assign(fips_county=df.zip.map(zip_crosswalk), qualifying_area="site", criteria="brownfield")
 
-    df["qualifying_area"] = "site"
-
-    df["criteria"] = "brownfield"
-
-    df["fips_county"] = df["zip"].map(zip_crosswalk)
+    # not needed for final output
 
     df = df.drop(columns=["zip", "state"])
 
+    #needed for eventual merge with other criteria
     df = df.rename(columns={"site_name": "area_title"})
 
     return df

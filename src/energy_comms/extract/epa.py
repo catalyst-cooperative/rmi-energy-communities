@@ -5,8 +5,6 @@ import pandas as pd
 SOURCE_URL = "https://www.epa.gov/system/files/documents/2022-04/re-powering-screening-dataset-2022.xlsx"
 
 
-
-
 def extract():
     # download area titles and convert to pandas dataframe
     sites_sheet_name = "re-powering sites"
@@ -20,11 +18,14 @@ def extract():
         if name == sites_sheet_name:
             sheet_idx = i
 
-    #with cleaned list of sheet names, pick the one you want (re-powering sites)
+    # with cleaned list of sheet names, pick the one you want (re-powering sites)
     if sheet_idx is not None:
-        df = pd.read_excel(SOURCE_URL, sheet_name=sheet_idx, dtype={"Zip Code": "string"})
+        df = pd.read_excel(
+            SOURCE_URL, sheet_name=sheet_idx, dtype={"Zip Code": "string"}
+        )
     else:
-        raise AssertionError(f"The {sites_sheet_name} sheet is not present in the EPA spreadsheet.")
-
+        raise AssertionError(
+            f"The {sites_sheet_name} sheet is not present in the EPA spreadsheet."
+        )
 
     return df

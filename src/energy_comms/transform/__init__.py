@@ -8,4 +8,4 @@ produced by the corresponding data source specific routines from the
 IRA energy communities criteria.
 """
 
-from energy_comms.transform import eia860, msha  # noqa: F401
+from energy_comms.transform import eia860, epa, msha  # noqa: F401

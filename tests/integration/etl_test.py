@@ -72,3 +72,16 @@ def test_eia860_etl(
         raise AssertionError("EIA 860 transform returned empty dataframe.")
     if "adjacent_id_fips" not in df.columns:
         raise AssertionError("adjacent_id_fips not in transformed EIA 860 dataframe.")
+
+
+def test_epa_etl() -> None:
+    """Verify that we can ETL the EPA brownfields data."""
+    raw_df = energy_comms.extract.epa.extract()
+    if raw_df.empty:
+        raise AssertionError("EPA extract returned empty dataframe.")
+    logger.info("Running EPA transform.")
+    df = energy_comms.transform.epa.transform(raw_df)
+    if df.empty:
+        raise AssertionError("EPA transform returned empty dataframe.")
+    if not df[(df.fips_county.str.len() != 5) & ~(df.fips_county.isnull())].empty:
+        raise AssertionError("EPA county FIPS column is not all 5 character strings.")

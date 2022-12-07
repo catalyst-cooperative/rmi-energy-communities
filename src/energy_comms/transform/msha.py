@@ -29,6 +29,8 @@ def transform(
             paths to various resources like the Census DP1 SQLite database. If
             None, the user defaults are used.
     """
+    # TODO: add in check if nonproducing and temporarily-idled mines
+    # haven't been updated in 5 years or so, impute missing lat, lon
     df = raw_df.copy()
     df.columns = df.columns.str.lower()
     df["current_status_dt"] = pd.to_datetime(df["current_status_dt"].astype("string"))

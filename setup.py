@@ -35,8 +35,8 @@ setup(
     # In order for the dependabot to update versions, they must be listed here.
     # Use the format pkg_name>=x,<y", Included packages are just examples:
     install_requires=[
-        "pandas>=1.4,<1.5.2",
-        "sqlalchemy>=1.4,<1.4.44",
+        "pandas>=1.4,<1.5.3",
+        "sqlalchemy>=1.4,<1.4.45",
         "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
     ],
     extras_require={
@@ -57,15 +57,16 @@ setup(
             "bandit>=1.6,<1.8",  # Checks code for security issues
             "coverage>=5.3,<6.6",  # Lets us track what code is being tested
             "doc8>=0.9,<1.1",  # Ensures clean documentation formatting
-            "flake8>=4.0,<5.1",  # A framework for linting & static analysis
+            "flake8>=4.0,<6.1",  # A framework for linting & static analysis
             "flake8-builtins>=1.5,<2.1",  # Avoid shadowing Python built-in names
             "flake8-colors>=0.1,<0.2",  # Produce colorful error / warning output
             "flake8-docstrings>=1.5,<1.7",  # Ensure docstrings are formatted well
-            "flake8-rst-docstrings>=0.2,<0.3",  # Allow use of ReST in docstrings
+            "flake8-rst-docstrings>=0.2,<0.4",  # Allow use of ReST in docstrings
             "flake8-use-fstring>=1.0,<1.5",  # Highlight use of old-style string formatting
             "mccabe>=0.6,<0.8",  # Checks that code isn't overly complicated
-            "mypy>=0.942,<0.991",  # Static type checking
+            "mypy>=0.942,<0.992",  # Static type checking
             "pep8-naming>=0.12,<0.14",  # Require PEP8 compliant variable names
+            "plotly==5.11.0",  # Used for visualizations
             "pre-commit>=2.9,<2.21",  # Allow us to run pre-commit hooks in testing
             "pydocstyle>=5.1,<6.2",  # Style guidelines for Python documentation
             "pytest>=6.2,<7.3",  # Our testing framework

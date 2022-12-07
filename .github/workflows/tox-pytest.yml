@@ -32,6 +32,26 @@ jobs:
           conda config --show
           printenv | sort
 
+      - name: Cache PUDL DB
+        uses: actions/cache@v3.0.5
+        with:
+          path: ~/pudl-work/sqlite/pudl.sqlite
+          # The last time we deployed Datasette. Update if we redeploy.
+          key: "2022-05-05"
+
+      - name: Download PUDL DB and log pre-test PUDL workspace contents
+        run: |
+          mkdir -p ~/pudl-work/sqlite/
+          if [ ! -f ~/pudl-work/sqlite/pudl.sqlite ]
+          then curl -o ~/pudl-work/sqlite/pudl.sqlite https://data.catalyst.coop/pudl.db
+          fi
+          find ~/pudl-work/
+
+      - name: Log SQLite3 version
+        run: |
+          conda run -n energy_comms which sqlite3
+          conda run -n energy_comms sqlite3 --version
+
       - name: Run PyTest with Tox
         run: |
           conda run -n energy_comms tox

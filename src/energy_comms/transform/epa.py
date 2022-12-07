@@ -1,8 +1,9 @@
+"""Transform functiosn for EPA brownfields data."""
 import pandas as pd
 
 
-def transform(df):
-
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    """Map zip codes to counties, prepare dataframe for map integration."""
     # from HUD: https://www.huduser.gov/portal/datasets/usps_crosswalk.html
 
     # make lower case and replace spaces

@@ -31,13 +31,13 @@ setup(
     license="MIT",
     # Fill in search keywords that users might use to find the package
     keywords=[],
-    python_requires=">=3.8,<3.11",
+    python_requires="==3.10",
     # In order for the dependabot to update versions, they must be listed here.
     # Use the format pkg_name>=x,<y", Included packages are just examples:
     install_requires=[
         "pandas>=1.4,<1.5.3",
         "sqlalchemy>=1.4,<1.4.46",
-        "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
+        "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@main",
     ],
     extras_require={
         "dev": [
@@ -55,10 +55,10 @@ setup(
         ],
         "tests": [
             "bandit>=1.6,<1.8",  # Checks code for security issues
-            "coverage>=5.3,<6.6",  # Lets us track what code is being tested
+            "coverage>=5.3,<7.1",  # Lets us track what code is being tested
             "doc8>=0.9,<1.1",  # Ensures clean documentation formatting
             "flake8>=4.0,<6.1",  # A framework for linting & static analysis
-            "flake8-builtins>=1.5,<2.1",  # Avoid shadowing Python built-in names
+            "flake8-builtins>=1.5,<2.2",  # Avoid shadowing Python built-in names
             "flake8-colors>=0.1,<0.2",  # Produce colorful error / warning output
             "flake8-docstrings>=1.5,<1.7",  # Ensure docstrings are formatted well
             "flake8-rst-docstrings>=0.2,<0.4",  # Allow use of ReST in docstrings
@@ -94,6 +94,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     # Directory to search recursively for __init__.py files defining Python packages
     packages=find_packages("src"),

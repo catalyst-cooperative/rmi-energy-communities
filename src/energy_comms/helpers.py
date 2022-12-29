@@ -3,6 +3,7 @@ import logging
 from typing import Any, Literal
 
 import geopandas
+import pandas as pd
 
 import pudl
 
@@ -138,3 +139,18 @@ def get_adjacent_geometries(
     # join the list of adjacent FIPS ids onto the MSHA dataframe
     output = gdf.join(adj_geoms_series, on=fips_column_name)
     return output
+
+
+def remove_invalid_lat_lon_records(
+    df: pd.DataFrame, latitude_col: str = "latitude", longitude_col: str = "longitude"
+) -> pd.DataFrame:
+    """Filter out records that don't have valid lat or lon values."""
+    lat_filter = ((df[latitude_col] >= -90) & (df[latitude_col] <= 90)) | df[
+        latitude_col
+    ].isnull()
+    df = df[lat_filter]
+    lon_filter = ((df[longitude_col] >= -180) & (df[longitude_col] <= 180)) | df[
+        longitude_col
+    ].isnull()
+    df = df[lon_filter]
+    return df

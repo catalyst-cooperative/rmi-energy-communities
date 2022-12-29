@@ -88,3 +88,15 @@ def test_geometry_intersections(test_dir: pathlib.Path) -> None:
     expected_gdf = expected_gdf.drop(columns=["adjacent_id_fips"])
 
     assert_geodataframe_equal(actual, expected_gdf, check_dtype=False)
+
+
+def test_invalid_lat_lon_range() -> None:
+    """Test if invalid latitude and longitude filter works."""
+    test_df = pd.DataFrame(
+        {"latitude": [1.1, 2.3, -90.5, None], "longitude": [2.9, 181.1, -180.1, 3.5]}
+    )
+    expected_df = pd.DataFrame({"latitude": [1.1, None], "longitude": [2.9, 3.5]})
+    actual_df = energy_comms.helpers.remove_invalid_lat_lon_records(
+        test_df
+    ).reset_index(drop=True)
+    pd.testing.assert_frame_equal(expected_df, actual_df)

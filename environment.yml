@@ -6,11 +6,11 @@ dependencies:
   # Packages required for setting up the environment
   - pip>=21,<23
   - python>=3.10,<3.12
-  - setuptools<62
+  - setuptools<66
 
   # Packages specified in setup.py that need or benefit from binary conda packages
-  - geopandas>=0.11,<0.12
-  - pygeos>=0.11,<0.13 # Python wrappers for the GEOS spatial libraries
+  - geopandas>=0.11,<0.13
+  - pygeos>=0.11,<0.14 # Python wrappers for the GEOS spatial libraries
   # Visualization and data validation packages used interactively but not required.
   - plotly>=5.11,<5.12
   # - python-snappy>=0.6,<0.7  # Supports snappy compression in pyarrow/parquet
@@ -21,6 +21,8 @@ dependencies:
   # Jupyter packages:
   - jupyterlab>=3.2,<4
   - nbconvert>=6,<7 # Used to clear notebook outputs in pre-commit hooks
+
+  - nodejs # Useful for Jupyter and prettier pre-commit hook
 
   # Use pip to install the package defined by this repo for development:
   - pip:

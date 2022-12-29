@@ -5,14 +5,14 @@ channels:
 dependencies:
   # Packages required for setting up the environment
   - pip>=21,<23
-  - python>=3.8,<3.11
+  - python>=3.10,<3.12
   - setuptools<62
 
   # Packages specified in setup.py that need or benefit from binary conda packages
   - geopandas>=0.11,<0.12
   - pygeos>=0.11,<0.13 # Python wrappers for the GEOS spatial libraries
   # Visualization and data validation packages used interactively but not required.
-  - plotly==5.11.0
+  - plotly<=5.11
   # - python-snappy>=0.6,<0.7  # Supports snappy compression in pyarrow/parquet
 
   # Packages not specified in setup.py that provide optional, helpful binaries:

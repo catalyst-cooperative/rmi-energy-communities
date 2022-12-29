@@ -31,13 +31,13 @@ setup(
     license="MIT",
     # Fill in search keywords that users might use to find the package
     keywords=[],
-    python_requires=">=3.8,<3.11",
+    python_requires=">=3.10,<3.12",
     # In order for the dependabot to update versions, they must be listed here.
     # Use the format pkg_name>=x,<y", Included packages are just examples:
     install_requires=[
         "pandas>=1.4,<1.5.3",
         "sqlalchemy>=1.4,<1.4.46",
-        "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
+        "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@main",
     ],
     extras_require={
         "dev": [
@@ -66,7 +66,6 @@ setup(
             "mccabe>=0.6,<0.8",  # Checks that code isn't overly complicated
             "mypy>=0.942,<0.992",  # Static type checking
             "pep8-naming>=0.12,<0.14",  # Require PEP8 compliant variable names
-            "plotly==5.11.0",  # Used for visualizations
             "pre-commit>=2.9,<2.21",  # Allow us to run pre-commit hooks in testing
             "pydocstyle>=5.1,<6.2",  # Style guidelines for Python documentation
             "pytest>=6.2,<7.3",  # Our testing framework

@@ -36,6 +36,7 @@ setup(
     # Use the format pkg_name>=x,<y", Included packages are just examples:
     install_requires=[
         "pandas>=1.4,<1.5.3",
+        "plotly>=5.11.0,<5.12",
         "sqlalchemy>=1.4,<1.4.47",
         "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
     ],

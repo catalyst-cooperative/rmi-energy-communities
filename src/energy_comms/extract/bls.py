@@ -8,6 +8,7 @@ from datetime import date
 
 import pandas as pd
 import requests
+from bs4 import BeautifulSoup
 from requests.models import HTTPError
 
 BLS_API_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
@@ -21,6 +22,10 @@ LAU_DATA_FILENAMES = [
 ]
 
 LAU_AREA_FILENAME = "la.area"
+
+MSA_URL = "https://www.bls.gov/oes/current/msa_def.htm"
+EXPECTED_MSA_FILENAME = "/oes/2021/may/area_definitions_m2021.xlsx"
+
 logger = logging.getLogger(__name__)
 
 
@@ -80,4 +85,26 @@ def extract_lau_rates() -> pd.DataFrame:
 def extract_lau_area_table() -> pd.DataFrame:
     """Extract local area unemployment table of area codes and names."""
     df = extract_lau_data(file_list=[LAU_AREA_FILENAME])
+    return df
+
+
+def extract_msa_codes() -> pd.DataFrame:
+    """Extract code definitions of Metropolitan Statistical Areas."""
+    resp = requests.get(MSA_URL)
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    excel_files = []
+    for link in soup.select('a[href*=".xls"]'):
+        excel_files.append(link["href"])
+    if excel_files == []:
+        raise AssertionError(f"No Excel files for MSA definitions found at {MSA_URL}")
+    if EXPECTED_MSA_FILENAME not in excel_files:
+        logger.warning(
+            f"The expected May 2021 MSA definitions filename was not found. \
+            Using {excel_files[0]}. The old filename was likely replaced with new definitions."
+        )
+        file_url = excel_files[0]
+    else:
+        file_url = EXPECTED_MSA_FILENAME
+    df = pd.read_excel("https://www.bls.gov" + file_url)
     return df

@@ -111,3 +111,8 @@ def test_bls_etl() -> None:
         raise AssertionError(
             "Local unemployment data areas extract returned empty dataframe."
         )
+    msa_codes = energy_comms.extract.bls.extract_msa_codes()
+    if msa_codes.empty:
+        raise AssertionError(
+            "Metropolitan Statistical Area code definitions extract returned empty dataframe."
+        )

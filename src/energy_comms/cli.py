@@ -9,8 +9,6 @@ import argparse
 import logging
 import sys
 
-from energy_comms.dummy import do_something
-
 # This is the module-level logger, for any logs
 logger = logging.getLogger(__name__)
 
@@ -60,11 +58,7 @@ def main() -> int:
     )
 
     args = parse_command_line(sys.argv)
-    caligula = do_something(a=args.alpha, b=args.beta)
-    print(
-        "If you are a man Winston, you are the last man: "
-        f"{args.alpha} + {args.beta} = {caligula}"
-    )
+    print(f"Alpha: {args.alpha}, beta: {args.beta} ")
     return 0
 
 

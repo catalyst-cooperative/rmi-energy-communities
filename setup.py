@@ -24,9 +24,9 @@ setup(
     maintainer_email="pudl@catalyst.coop",
     url="",  # Can be repo or docs URL if no separate web page exists.
     project_urls={
-        "Source": "https://github.com/catalyst-cooperative/energy_comms",
+        "Source": "https://github.com/catalyst-cooperative/rmi-energy-communities",
         "Documentation": "https://catalystcoop-energy_comms.readthedocs.io",
-        "Issue Tracker": "https://github.com/catalyst-cooperative/energy_comms/issues",
+        "Issue Tracker": "https://github.com/catalyst-cooperative/rmi-energy-communities/issues",
     },
     license="MIT",
     # Fill in search keywords that users might use to find the package
@@ -37,7 +37,7 @@ setup(
     install_requires=[
         "pandas>=1.4,<1.5.3",
         "sqlalchemy>=1.4,<1.4.47",
-        "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@main",
+        "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
     ],
     extras_require={
         "dev": [
@@ -66,7 +66,6 @@ setup(
             "mccabe>=0.6,<0.8",  # Checks that code isn't overly complicated
             "mypy>=0.942,<0.992",  # Static type checking
             "pep8-naming>=0.12,<0.14",  # Require PEP8 compliant variable names
-            "plotly>=5.11.0,<5.12",  # Used for visualizations
             "pre-commit>=2.9,<2.22",  # Allow us to run pre-commit hooks in testing
             "pydocstyle>=5.1,<6.3",  # Style guidelines for Python documentation
             "pytest>=6.2,<7.3",  # Our testing framework

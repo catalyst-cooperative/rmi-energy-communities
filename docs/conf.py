@@ -28,7 +28,7 @@ release = pkg_resources.get_distribution("catalystcoop.energy_comms").version
 
 # -- Project information -----------------------------------------------------
 
-project = "New Catalyst Python Project"
+project = "Catalyst & RMI Energy Communities"
 copyright = (  # noqa: A001
     f"202X-{datetime.date.today().year}, Catalyst Cooperative, CC-BY-4.0"
 )
@@ -61,7 +61,7 @@ autoapi_ignore = [
 ]
 
 # GitHub repo
-issues_github_path = "catalyst-cooperative/energy_comms"
+issues_github_path = "catalyst-cooperative/rmi-energy-communities"
 
 # In order to be able to link directly to documentation for other projects,
 # we need to define these package to URL mappings:

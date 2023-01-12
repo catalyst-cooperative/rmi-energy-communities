@@ -89,3 +89,25 @@ def test_epa_etl(pudl_settings_fixture: dict[Any, Any] | None) -> None:
         raise AssertionError(
             "EPA county ID FIPS column is not all 5 character strings."
         )
+
+
+def test_bls_etl() -> None:
+    """Verify that we can ETL the BLS employment data."""
+    # for speed, only extract 2010-2014 data
+    nat_unemployment_df = energy_comms.extract.bls.extract_national_unemployment_rates()
+    if nat_unemployment_df.empty:
+        raise AssertionError(
+            "National unemployment rate extract returned empty dataframe."
+        )
+    raw_data_df = energy_comms.extract.bls.extract_lau_data(
+        file_list=["la.data.0.CurrentU10-14"]
+    )
+    if raw_data_df.empty:
+        raise AssertionError(
+            "Local unemployment data extract returned empty dataframe."
+        )
+    raw_area_df = energy_comms.extract.bls.extract_lau_area_table()
+    if raw_area_df.empty:
+        raise AssertionError(
+            "Local unemployment data areas extract returned empty dataframe."
+        )

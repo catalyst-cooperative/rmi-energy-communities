@@ -5,4 +5,4 @@ source. This process ends with a dictionary of :class:`pandas.DataFrame` objects
 that are minimally altered from their original data and are ready for cleaning
 in the transform modules.
 """
-from energy_comms.extract import eia860, epa, msha  # noqa: F401
+from energy_comms.extract import bls, eia860, epa, msha  # noqa: F401

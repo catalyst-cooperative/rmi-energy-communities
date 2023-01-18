@@ -1,12 +1,16 @@
 """Identify energy communities as defined by the Inflation Reduction Act."""
 
 import logging
+from pathlib import Path
 
 import pkg_resources
 
 # In order for the package modules to be available when you import the package,
 # they need to be imported here somehow. Not sure if this is best practice though.
 from energy_comms import cli, extract, helpers, transform  # noqa: F401
+
+REPO_DIR = Path(__file__).resolve().parent.parent.parent
+DATA_INPUTS = Path(REPO_DIR / "data_inputs")
 
 __author__ = "Catalyst Cooperative"
 __contact__ = "pudl@catalyst.coop"

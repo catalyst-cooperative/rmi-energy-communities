@@ -1,12 +1,13 @@
 """Extract MSHA mines data and load into pandas dataframe."""
 import io
 import logging
-import pathlib
 import zipfile
 
 import pandas as pd
 import requests
 from requests.models import HTTPError
+
+import energy_comms
 
 logger = logging.getLogger(__name__)
 
@@ -16,14 +17,21 @@ METADATA_URL = (
 )
 
 
-def get_metadata(filepath: pathlib.Path) -> None:
-    """Download and save mines metadata from MSHA site."""
+def get_metadata(filename: str = "metadata.txt") -> None:
+    """Download and save mines metadata from MSHA site.
+
+    Args:
+        filename: Name for the downloaded metadata file.
+    """
     m = requests.get(METADATA_URL)
     if m.status_code != 200:
         raise HTTPError(
             f"Bad response from Mine Data Retrieval System metadata. Status code: {m.status_code}"
         )
-    with open(METADATA_URL, "w") as f:
+    msha_input_dir = energy_comms.DATA_INPUTS / "msha"
+    msha_input_dir.mkdir(parents=True, exist_ok=True)
+    with open(msha_input_dir / filename, "w") as f:
+        logger.info(f"Writing metadata to {msha_input_dir}")
         f.write(m.text)
 
 

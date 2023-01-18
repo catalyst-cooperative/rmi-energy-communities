@@ -68,7 +68,7 @@ setup(
             "pep8-naming>=0.12,<0.14",  # Require PEP8 compliant variable names
             "plotly>=5.11.0,<5.13",  # Used for visualizations
             "pre-commit>=2.9,<2.22",  # Allow us to run pre-commit hooks in testing
-            "pydocstyle>=5.1,<6.3",  # Style guidelines for Python documentation
+            "pydocstyle>=5.1,<6.4",  # Style guidelines for Python documentation
             "pytest>=6.2,<7.3",  # Our testing framework
             "pytest-console-scripts>=1.1,<1.4",  # Allow automatic testing of scripts
             "pytest-cov>=2.10,<4.1",  # Pytest plugin for working with coverage

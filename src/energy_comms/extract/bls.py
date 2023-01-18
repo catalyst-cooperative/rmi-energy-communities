@@ -32,9 +32,11 @@ MSA_URL = "https://www.bls.gov/oes/current/msa_def.htm"
 
 EXPECTED_MSA_FILENAME = "/oes/2021/may/area_definitions_m2021.xlsx"
 
-QCEW_URL = "https://data.bls.gov/cew/data/files/{yr}/csv/{yr}_annual_by_area.zip"
+QCEW_URL = "https://data.bls.gov/cew/data/files/"
 
 QCEW_YEARS = list(np.arange(2010, date.today().year))
+
+QCEW_AREA_URL = "https://www.bls.gov/cew/classifications/areas/area-titles-csv.csv"
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +156,7 @@ def extract_msa_codes() -> pd.DataFrame:
     return df
 
 
-def download_qcew(years: list[int] = QCEW_YEARS, update: bool = False) -> None:
+def download_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> None:
     """Download Quarterly Census of Employment and Wages annual averages by area.
 
     Checks for zip files of annual data in the ``energy_comms.DATA_INPUTS``
@@ -175,7 +177,7 @@ def download_qcew(years: list[int] = QCEW_YEARS, update: bool = False) -> None:
         file_path = data_dir / f"{year}_annual_by_area.zip"
         if not (file_path.exists()) or update:
             logger.info(f"Attempting download of {year} QCEW by area data.")
-            file_url = f"https://data.bls.gov/cew/data/files/{year}/csv/{year}_annual_by_area.zip"
+            file_url = f"{QCEW_URL}{year}/csv/{year}_annual_by_area.zip"
             resp = requests.get(file_url)
             if resp.status_code != 200:
                 if year != max(years):
@@ -189,3 +191,13 @@ def download_qcew(years: list[int] = QCEW_YEARS, update: bool = False) -> None:
             else:
                 with open(file_path, "wb") as file:
                     file.write(resp.content)
+
+
+def extract_qcew_areas() -> pd.DataFrame:
+    """Download Quarterly Census of Employment and Wages area information.
+
+    Return as dataframe.
+    See https://www.bls.gov/cew/classifications/areas/qcew-area-titles.htm
+    """
+    df = pd.read_csv(QCEW_AREA_URL)
+    return df

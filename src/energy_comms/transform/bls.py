@@ -192,3 +192,11 @@ def transform_msa_codes(df: pd.DataFrame) -> pd.DataFrame:
         df["msa_code"],
     )
     return df
+
+
+def transform_qcew_areas(df: pd.DataFrame) -> pd.DataFrame:
+    """Transform QCEW area information."""
+    df.columns = df.columns.str.strip().str.lower().replace(" ", "_")
+    df = df.astype("string")
+    df["area_fips"] = df["area_fips"].str.zfill(5)
+    return df

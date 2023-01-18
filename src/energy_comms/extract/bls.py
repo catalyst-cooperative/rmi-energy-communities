@@ -26,6 +26,8 @@ LAU_DATA_FILENAMES = [
 
 LAU_AREA_FILENAME = "la.area"
 
+LAU_FOOTNOTE_FILENAME = "la.footnote"
+
 MSA_URL = "https://www.bls.gov/oes/current/msa_def.htm"
 
 EXPECTED_MSA_FILENAME = "/oes/2021/may/area_definitions_m2021.xlsx"
@@ -118,6 +120,12 @@ def extract_lau_rates(update: bool = False) -> pd.DataFrame:
 def extract_lau_area_table(update: bool = False) -> pd.DataFrame:
     """Extract local area unemployment table of area codes and names."""
     df = extract_lau_data(file_list=[LAU_AREA_FILENAME], update=update)
+    return df
+
+
+def extract_lau_footnote_table(update: bool = False) -> pd.DataFrame:
+    """Extract LAU footnotes codes table."""
+    df = extract_lau_data(file_list=[LAU_FOOTNOTE_FILENAME], update=update)
     return df
 
 

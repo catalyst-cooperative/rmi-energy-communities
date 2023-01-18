@@ -100,13 +100,13 @@ def test_bls_etl() -> None:
             "National unemployment rate extract returned empty dataframe."
         )
     raw_data_df = energy_comms.extract.bls.extract_lau_data(
-        file_list=["la.data.0.CurrentU10-14"]
+        file_list=["la.data.0.CurrentU10-14"], update=True
     )
     if raw_data_df.empty:
         raise AssertionError(
             "Local unemployment data extract returned empty dataframe."
         )
-    raw_area_df = energy_comms.extract.bls.extract_lau_area_table()
+    raw_area_df = energy_comms.extract.bls.extract_lau_area_table(update=True)
     if raw_area_df.empty:
         raise AssertionError(
             "Local unemployment data areas extract returned empty dataframe."

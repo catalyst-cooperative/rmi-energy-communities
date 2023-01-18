@@ -38,61 +38,86 @@ logger = logging.getLogger(__name__)
 
 
 def extract_national_unemployment_rates() -> pd.DataFrame:
-    """Extract national unemployment rate data from Current Population Survey."""
-    headers = {"Content-type": "application/json"}
+    """Extract national unemployment rate data from Current Population Survey.
+
+    The BLS API restricts data access to 10 years at a time, so it's necessary
+    to make 2 requests (2009 - 2018 and then 2018 onwards). These requests are
+    concatenated into one dataframe.
+    """
     # criteria specifies national unemployment rate of the previous year
     # so starting with 2009
-    data = json.dumps(
-        {
-            "seriesid": ["LNS14000000"],
-            "startyear": "2009",
-            "endyear": str(date.today().year),
-        }
-    )
-    resp = requests.post(BLS_API_URL, data=data, headers=headers)
-    json_data = json.loads(resp.text)
-    status = json_data["status"]
-    if status != "REQUEST_SUCCEEDED":
-        raise HTTPError(
-            f"Bad response from BLS API: {BLS_API_URL}. Got status {status}"
+    # API only retrieves 10 years of data at a time
+    start_end_year_intervals = [["2009", "2018"], ["2019", str(date.today().year)]]
+    if date.today().year > 2028:
+        logger.warning("Only retrieving data up to 2028.")
+
+    df = pd.DataFrame()
+    headers = {"Content-type": "application/json"}
+    for i in range(len(start_end_year_intervals)):
+        data = json.dumps(
+            {
+                "seriesid": ["LNS14000000"],
+                "startyear": start_end_year_intervals[i][0],
+                "endyear": start_end_year_intervals[i][1],
+            }
         )
-    df = pd.DataFrame()
-    for series in json_data["Results"]["series"]:
-        series_df = pd.json_normalize(series["data"])
-        series_df["series_id"] = series["seriesID"]
-        df = pd.concat([df, series_df])
-    df = df[(df.period >= "M01") & (df.period <= "M12")]
-    return df
-
-
-def extract_lau_data(file_list: list[str] = []) -> pd.DataFrame:
-    """Extract local area unemployment data."""
-    df = pd.DataFrame()
-    for filename in file_list:
-        file_url = LAU_URL + filename
-        resp = requests.get(file_url)
-        if resp.status_code != 200:
+        resp = requests.post(BLS_API_URL, data=data, headers=headers)
+        json_data = json.loads(resp.text)
+        status = json_data["status"]
+        if status != "REQUEST_SUCCEEDED":
             raise HTTPError(
-                f"Bad response from BLS URL: {file_url}. Status code: {resp.status_code}"
+                f"Bad response from BLS API: {BLS_API_URL}. Got status {status}"
             )
-        else:
-            df = pd.concat([df, pd.read_table(io.StringIO(resp.text))])
+        for series in json_data["Results"]["series"]:
+            series_df = pd.json_normalize(series["data"])
+            series_df["series_id"] = series["seriesID"]
+            df = pd.concat([df, series_df])
     return df
 
 
-def extract_lau_rates() -> pd.DataFrame:
+def extract_lau_data(file_list: list[str] = [], update: bool = False) -> pd.DataFrame:
+    """Download local area unemployment data or read in from inputs directory.
+
+    Arguments:
+        file_list: list of LAU file names to download from BLS website
+        update: If True, download a fresh copy of the annual data for every year instead of
+            using the data in the ``energy_comms.DATA_INPUTS`` directory. Default is False.
+    """
+    df = pd.DataFrame()
+    data_dir = energy_comms.DATA_INPUTS / "lau"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    for filename in file_list:
+        file_path = data_dir / filename
+        if not (file_path.exists()) or update:
+            file_url = LAU_URL + filename
+            resp = requests.get(file_url)
+            if resp.status_code != 200:
+                raise HTTPError(
+                    f"Bad response from BLS URL: {file_url}. Status code: {resp.status_code}"
+                )
+            else:
+                with open(file_path, "wb") as file:
+                    file.write(resp.content)
+                new_df = pd.read_table(io.StringIO(resp.text))
+        else:
+            new_df = pd.read_table(file_path)
+        df = pd.concat([df, new_df])
+    return df
+
+
+def extract_lau_rates(update: bool = False) -> pd.DataFrame:
     """Extract local area unemployment rates from 2010 - 2024."""
     if date.today().year > 2024:
         logger.warning(
             "Local area unemployment rate data is only being extracted up to year 2024."
         )
-    df = extract_lau_data(file_list=LAU_DATA_FILENAMES)
+    df = extract_lau_data(file_list=LAU_DATA_FILENAMES, update=update)
     return df
 
 
-def extract_lau_area_table() -> pd.DataFrame:
+def extract_lau_area_table(update: bool = False) -> pd.DataFrame:
     """Extract local area unemployment table of area codes and names."""
-    df = extract_lau_data(file_list=[LAU_AREA_FILENAME])
+    df = extract_lau_data(file_list=[LAU_AREA_FILENAME], update=update)
     return df
 
 
@@ -131,7 +156,7 @@ def download_qcew(years: list[int] = QCEW_YEARS, update: bool = False) -> None:
         years: A list of years to download QCEW annual data for. Defaults to ``QCEW_YEARS``
             which is a list of years from 2010 to present.
         update: If True, download a fresh copy of the annual data for every year instead of
-            using the data in the ``inputs`` directory. Default is False.
+            using the data in the ``energy_comms.DATA_INPUTS`` directory. Default is False.
     """
     data_dir = energy_comms.DATA_INPUTS / "qcew"
     data_dir.mkdir(parents=True, exist_ok=True)

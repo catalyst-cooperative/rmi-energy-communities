@@ -97,6 +97,9 @@ def transform_lau_areas(raw_df: pd.DataFrame) -> pd.DataFrame:
     """
     df = raw_df.copy()
     df.columns = df.columns.str.strip().str.lower()
+    df = df.astype(
+        {"area_type_code": "string", "area_code": "string", "area_text": "string"}
+    )
     # only keep records for county and MSA
     df = df[(df.area_code.str[:2] == "CN") | (df.area_code.str[:2] == "MT")]
     df["geographic_level"] = np.where(
@@ -154,4 +157,38 @@ def get_local_area_unemployment_rates(
     area_df = transform_lau_areas(raw_area_df)
     df = lau_df.merge(area_df, on="series_id", how="left")
     df = df[~df.geographic_level.isnull()]
+    return df
+
+
+def transform_msa_codes(df: pd.DataFrame) -> pd.DataFrame:
+    """Transform dataframe of MSA codes and names.
+
+    Clean column names, enforce string types, construct FIPS codes and geoid.
+    """
+    df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
+    col_rename_dict = {
+        "fips_code": "state_id_fips",
+        "county_code": "county_id_fips",
+        "township_code": "township_id_fips",
+    }
+    # msa names and codes column have names like may_2021_msa_code
+    # make this name independent of date of data publishing
+    col_rename_dict.update(
+        {
+            df.columns[df.columns.str.contains("msa_name")][0]: "msa_name",
+            df.columns[df.columns.str.contains("msa_code")][0]: "msa_code",
+        }
+    )
+    # all columns are string type
+    df = df.rename(columns=col_rename_dict).astype("string")
+    # construct FIPS codes
+    df["state_id_fips"] = df["state_id_fips"].str.zfill(2)
+    df["county_id_fips"] = df["county_id_fips"].str.zfill(3)
+    df["township_id_fips"] = df["township_id_fips"].str.zfill(3)
+    # construct geoid
+    df["geoid"] = np.where(
+        df["msa_name"].str.contains("nonmetropolitan"),
+        df["state_id_fips"] + df["county_id_fips"],
+        df["msa_code"],
+    )
     return df

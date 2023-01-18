@@ -34,7 +34,7 @@ EXPECTED_MSA_FILENAME = "/oes/2021/may/area_definitions_m2021.xlsx"
 
 QCEW_URL = "https://data.bls.gov/cew/data/files/{yr}/csv/{yr}_annual_by_area.zip"
 
-QCEW_YEARS = np.arange(2010, date.today().year)
+QCEW_YEARS = list(np.arange(2010, date.today().year))
 
 logger = logging.getLogger(__name__)
 

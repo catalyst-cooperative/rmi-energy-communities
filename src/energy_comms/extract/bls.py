@@ -6,10 +6,13 @@ import json
 import logging
 from datetime import date
 
+import numpy as np
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from requests.models import HTTPError
+
+import energy_comms
 
 BLS_API_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
 
@@ -24,7 +27,12 @@ LAU_DATA_FILENAMES = [
 LAU_AREA_FILENAME = "la.area"
 
 MSA_URL = "https://www.bls.gov/oes/current/msa_def.htm"
+
 EXPECTED_MSA_FILENAME = "/oes/2021/may/area_definitions_m2021.xlsx"
+
+QCEW_URL = "https://data.bls.gov/cew/data/files/{yr}/csv/{yr}_annual_by_area.zip"
+
+QCEW_YEARS = np.arange(2010, date.today().year)
 
 logger = logging.getLogger(__name__)
 
@@ -108,3 +116,40 @@ def extract_msa_codes() -> pd.DataFrame:
         file_url = EXPECTED_MSA_FILENAME
     df = pd.read_excel("https://www.bls.gov" + file_url)
     return df
+
+
+def download_qcew(years: list[int] = QCEW_YEARS, update: bool = False) -> None:
+    """Download Quarterly Census of Employment and Wages annual averages by area.
+
+    Checks for zip files of annual data in the ``energy_comms.DATA_INPUTS``
+    directory. If a zip file isn't present or ``update`` is True, the files will
+    be downloaded from the BLS website and saved to the ``energy_comms.DATA_INPUTS`` directory.
+    Note that the most recent year of data might not be available yet in which case a warning
+    will be produced if the file cannot be downloaded.
+
+    Args:
+        years: A list of years to download QCEW annual data for. Defaults to ``QCEW_YEARS``
+            which is a list of years from 2010 to present.
+        update: If True, download a fresh copy of the annual data for every year instead of
+            using the data in the ``inputs`` directory. Default is False.
+    """
+    data_dir = energy_comms.DATA_INPUTS / "qcew"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    for year in years:
+        file_path = data_dir / f"{year}_annual_by_area.zip"
+        if not (file_path.exists()) or update:
+            logger.info(f"Attempting download of {year} QCEW by area data.")
+            file_url = f"https://data.bls.gov/cew/data/files/{year}/csv/{year}_annual_by_area.zip"
+            resp = requests.get(file_url)
+            if resp.status_code != 200:
+                if year != max(years):
+                    raise HTTPError(
+                        f"Bad response from BLS URL: {file_url}. Status code: {resp.status_code}"
+                    )
+                else:
+                    logger.warning(
+                        f"Could not download {year} QCEW data. It's likely not available yet."
+                    )
+            else:
+                with open(file_path, "wb") as file:
+                    file.write(resp.content)

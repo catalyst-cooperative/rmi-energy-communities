@@ -183,9 +183,11 @@ def transform_msa_codes(df: pd.DataFrame) -> pd.DataFrame:
         df["state_id_fips"] + df["county_id_fips"],
         df["msa_code"],
     )
+    df["geoid"] = df["geoid"].astype("string")
     return df
 
 
+# TODO: what is data used for?
 def transform_qcew_areas(df: pd.DataFrame) -> pd.DataFrame:
     """Transform QCEW area information."""
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")

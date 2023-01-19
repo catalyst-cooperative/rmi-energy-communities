@@ -157,15 +157,16 @@ def remove_invalid_lat_lon_records(
     return df
 
 
-def add_bls_qcew_geographic_level(df: pd.DataFrame) -> pd.DataFrame:
+def add_bls_qcew_geo_cols(qcew_df: pd.DataFrame) -> pd.DataFrame:
     """Using BLS area codes, make a column indicating the geographic level of the record.
 
     Geographic levels are counties, states, MSA, etc. In this case, since QCEW data
     is filtered for county and MSA, only those geographic levels are found.
 
     Args:
-        df: Dataframe to add geographic levels to. Probably the QCEW transformed data.
+        qcew_df: Dataframe to add geographic levels to. Probably the QCEW transformed data.
     """
+    df = qcew_df.copy()
     df["geographic_level"] = np.where(
         df["area_title"].str.contains("Statewide"), "state", None
     )
@@ -197,18 +198,15 @@ def add_bls_qcew_geographic_level(df: pd.DataFrame) -> pd.DataFrame:
         "undefined",
         df["geographic_level"],
     )
-    """
-    # TODO: fix this, make state column
-    df[["area", "state"]] = df["area_title"].str.split(",", 1, expand=True)
-    df["state"] = np.where(
-        df["state"].isnull(),
-        df["area_title"].str.split("-- Statewide").str.get(0),
-        df["state"],
+
+    # add geoid column
+    df["geoid"] = df["area_fips"]
+    # take out C in MSA records to add extra 0
+    df["geoid"] = df["geoid"].str.replace("C", "")
+    # for MSAs, make geoid to match census crosswalk
+    df["geoid"] = np.where(
+        df["geographic_level"] == "metropolitan_stat_area",
+        df["geoid"] + "0",
+        df["geoid"],
     )
-    df["state"] = np.where(
-        df["state"].str.contains("MSA"),
-        df["area_title"].str.split(",").str.get(1),
-        df["state"],
-    )
-    """
     return df

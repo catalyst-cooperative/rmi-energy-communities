@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 FOSSIL_NAICS_CODES = ["2121", "211", "213", "23712", "486", "4247", "22112"]
 
 
-def get_fossil_employment_qualifying_areas(qcew_df: pd.DataFrame) -> pd.DataFrame:
+def get_fossil_employment_qualifying_areas(
+    qcew_df: pd.DataFrame, msa_df: pd.DataFrame
+) -> pd.DataFrame:
     """Find qualifying areas that meet the employment criteria.
 
     This criteria says any area that has (any time 2010 onwards) .17%
@@ -21,26 +23,24 @@ def get_fossil_employment_qualifying_areas(qcew_df: pd.DataFrame) -> pd.DataFram
     or natural gas.
 
     Args:
-        qcew_data: Dataframe of the transformed QCEW data.
+        qcew_df: Dataframe of the transformed QCEW data.
+        msa_df: Dataframe of the MSA area code information.
 
     Returns:
         Dataframe with areas that qualify under this criteria.
     """
+    df = qcew_df.copy()
     # get data for total employees in an area
-    total_employment_df = qcew_df[
-        (qcew_df.industry_code == "10") & (qcew_df.own_code == 0)
-    ]
-    total_employment_df = energy_comms.helpers.add_bls_qcew_geographic_level(
+    total_employment_df = df[(df.industry_code == "10") & (df.own_code == 0)]
+    total_employment_df = energy_comms.helpers.add_bls_qcew_geo_cols(
         total_employment_df
     )
     total_employment_df = total_employment_df.rename(
         columns={"annual_avg_emplvl": "total_employees"}
     )
     # get data for fossil fuel employees in an area
-    fossil_employment_df = qcew_df.loc[
-        qcew_df["industry_code"].isin(FOSSIL_NAICS_CODES)
-    ]
-    fossil_employment_df = energy_comms.helpers.add_bls_qcew_geographic_level(
+    fossil_employment_df = df.loc[df["industry_code"].isin(FOSSIL_NAICS_CODES)]
+    fossil_employment_df = energy_comms.helpers.add_bls_qcew_geo_cols(
         fossil_employment_df
     )
     fossil_employment_df = (
@@ -72,8 +72,12 @@ def get_fossil_employment_qualifying_areas(qcew_df: pd.DataFrame) -> pd.DataFram
     full_df["meets_fossil_employment_threshold"] = np.where(
         full_df["percent_fossil_employment"] > 0.17, 1, 0
     )
-
-    # TODO: geoid thing - go MSA to county
+    full_df = full_df.merge(msa_df, on="geoid", how="inner")
+    full_df["full_county_id_fips"] = np.where(
+        full_df["geographic_level"] == "county",
+        full_df["geoid"],
+        full_df["state_id_fips"] + full_df["county_id_fips"],
+    )
 
     return full_df
 
@@ -88,13 +92,14 @@ def get_unemployment_rate_qualifying_areas(
 
     Args:
         national_unemployment_df: Transformed dataframe of national unemployment rates
-            from the CPS data.
-        lau_unemployment_df: Transformed dataframe of local area unemployment rates.
+            from the CPS data. The result of
+            ``energy_comms.transform.bls.get_national_unemployment_annual_avg()``
+        lau_unemployment_df: Transformed dataframe of local area unemployment rates. The
+            result of ``energy_comms.transform.bls.get_local_area_unemployment_rates()``
 
     Returns:
         Dataframe with areas that qualify under this criteria.
     """
-    # get final unemployment data
     full_df = lau_unemployment_df.merge(
         national_unemployment_df,
         left_on="year",
@@ -107,4 +112,41 @@ def get_unemployment_rate_qualifying_areas(
         1,
         0,
     )
+    full_df["full_county_id_fips"] = np.where(
+        full_df["geographic_level"] == "county",
+        full_df["state_id_fips"] + full_df["geoid"],
+        full_df["geoid"].str[0:5],
+    )
     return full_df
+
+
+def get_employment_criteria_qualifying_areas(
+    fossil_employment_df: pd.DataFrame, unemployment_df: pd.DataFrame
+) -> pd.DataFrame:
+    """Combine employment criteria dataframes to find all qualifying areas."""
+    # TODO: correct? merge on just county_id_fips even if geographic_level doesn't match?
+    df = fossil_employment_df.merge(
+        unemployment_df,
+        on=["full_county_id_fips"],
+        how="outer",
+    )
+    qualifying_areas = df[
+        (df["meets_fossil_employment_threshold"] == 1)
+        & (df["meets_unemployment_threshold"] == 1)
+    ]
+    qualifying_areas = qualifying_areas.drop_duplicates(subset=["full_county_id_fips"])
+    qualifying_areas = qualifying_areas[
+        [
+            "full_county_id_fips",
+            "area_title",
+            "area_text",
+            "state",
+            "msa_name",
+            "percent_fossil_employment",
+            "local_area_unemployment_rate",
+            "national_unemployment_rate",
+        ]
+    ]
+    qualifying_areas["qualifying_criteria"] = "fossil_fuel_employment"
+    qualifying_areas["qualifying_area"] = "MSA or non-MSA"
+    return qualifying_areas

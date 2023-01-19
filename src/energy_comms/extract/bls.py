@@ -169,6 +169,9 @@ def download_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> N
     Concatenates all QCEW data for counties and MSAs for each year in ``years`` and writes
     this to another CSV in ``yearly_concatenated_csvs`` directory.
 
+    Note: This function takes a while to run depending on how fast your network
+    connection is.
+
     Args:
         years: A list of years to download QCEW annual data for. Defaults to ``QCEW_YEARS``
             which is a list of years from 2010 to present.
@@ -215,6 +218,7 @@ def download_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> N
                             skip_header = True
 
 
+# TODO: probably just want to run this on one year at a time, update to reflect that
 def read_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> pd.DataFrame:
     """Read QCEW data in from CSVs to dataframe and concatenate all years."""
     if update:

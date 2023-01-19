@@ -73,5 +73,8 @@ def transform(
         add_adjacent_geoms=True,
         pudl_settings=pudl_settings,
     )
-
+    df = df.assign(
+        qualifying_area="census_tract",
+        qualifying_criteria="coal_plant",
+    )
     return df

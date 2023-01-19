@@ -45,7 +45,7 @@ def transform(
     )
     df = df.assign(
         qualifying_area="point",
-        criteria="brownfield",
+        qualifying_criteria="brownfield",
     )
 
     return df

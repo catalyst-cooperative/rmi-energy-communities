@@ -168,7 +168,7 @@ def add_bls_qcew_geo_cols(qcew_df: pd.DataFrame) -> pd.DataFrame:
     """
     df = qcew_df.copy()
     df["geographic_level"] = np.where(
-        df["area_title"].str.contains("Statewide"), "state", None
+        df["area_title"].str.contains("Statewide"), "state", pd.NA
     )
     df["geographic_level"] = np.where(
         df["area_title"].str.contains("Parish|City|Borough|County"),

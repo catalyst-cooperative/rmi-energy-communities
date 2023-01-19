@@ -218,21 +218,30 @@ def download_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> N
                             skip_header = True
 
 
-# TODO: probably just want to run this on one year at a time, update to reflect that
-def read_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> pd.DataFrame:
-    """Read QCEW data in from CSVs to dataframe and concatenate all years."""
+def extract_qcew_data(
+    years: list[int] = QCEW_YEARS, update: bool = False
+) -> pd.DataFrame:
+    """Read QCEW data in from CSVs to dataframe and concatenate all years.
+
+    Note: probably best to just run one year (or a couple years) at a time
+    because the dataframes are large.
+    """
     if update:
         download_qcew_data(years=years)
     df = pd.DataFrame()
     for year in years:
         logger.info(f"Reading {year} CSV data into pandas dataframe.")
+        file_path = (
+            energy_comms.DATA_INPUTS
+            / f"qcew/yearly_concatenated_csvs/{year}_counties_msas.csv"
+        )
+        if not file_path.exists():
+            logger.info(f"No {year} QCEW data.")
+            continue
         df = pd.concat(
             [
                 df,
-                pd.read_csv(
-                    energy_comms.DATA_INPUTS
-                    / f"qcew/yearly_concatenated_csvs/{year}_counties_msas.csv"
-                ),
+                pd.read_csv(file_path),
             ]
         )
     return df

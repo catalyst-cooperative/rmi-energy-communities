@@ -1,6 +1,7 @@
 """Combine the data sources to find qualifying areas."""
 
 import logging
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 FOSSIL_NAICS_CODES = ["2121", "211", "213", "23712", "486", "4247", "22112"]
 
 
-def get_fossil_employment_qualifying_areas(
+def fossil_employment_qualifying_areas(
     qcew_df: pd.DataFrame, msa_df: pd.DataFrame
 ) -> pd.DataFrame:
     """Find qualifying areas that meet the employment criteria.
@@ -82,7 +83,7 @@ def get_fossil_employment_qualifying_areas(
     return full_df
 
 
-def get_unemployment_rate_qualifying_areas(
+def unemployment_rate_qualifying_areas(
     national_unemployment_df: pd.DataFrame, lau_unemployment_df: pd.DataFrame
 ) -> pd.DataFrame:
     """Find qualifying areas that meet the unemployment rate criteria.
@@ -120,15 +121,22 @@ def get_unemployment_rate_qualifying_areas(
     return full_df
 
 
-def get_employment_criteria_qualifying_areas(
+def employment_criteria_qualifying_areas(
     fossil_employment_df: pd.DataFrame, unemployment_df: pd.DataFrame
 ) -> pd.DataFrame:
-    """Combine employment criteria dataframes to find all qualifying areas."""
+    """Combine employment criteria dataframes to find all qualifying areas.
+
+    Args:
+        fossil_employment_df: Qualifying areas for fossil employment criteria.
+            Result of ``fossil_employment_qualifying_areas``.
+        unemployment_df: Qualifying areas for unemployment criteria. Result of
+            ``unemployment_rate_qualifying_areas``.
+    """
     # TODO: correct? merge on just county_id_fips even if geographic_level doesn't match?
     df = fossil_employment_df.merge(
         unemployment_df,
         on=["full_county_id_fips"],
-        how="outer",
+        how="left",
     )
     qualifying_areas = df[
         (df["meets_fossil_employment_threshold"] == 1)
@@ -150,3 +158,53 @@ def get_employment_criteria_qualifying_areas(
     qualifying_areas["qualifying_criteria"] = "fossil_fuel_employment"
     qualifying_areas["qualifying_area"] = "MSA or non-MSA"
     return qualifying_areas
+
+
+def _explode_adjacent_id_fips(
+    df: pd.DataFrame,
+    census_geometry: Literal["state", "county", "tract"] = "tract",
+    closure_type: str = "coalmine",
+) -> pd.DataFrame:
+    adj_records = pd.DataFrame()
+    adj_records[f"{census_geometry}_id_fips"] = df.adjacent_id_fips.explode()
+    adj_records["qualifying_area"] = f"{census_geometry}"
+    adj_records["criteria"] = f"{closure_type}_adjacent_tract"
+    return adj_records
+
+
+def coal_plant_mine_criteria_qualifying_areas(
+    msha_df: pd.DataFrame,
+    eia_df: pd.DataFrame,
+    census_geometry: Literal["state", "county", "tract"] = "tract",
+) -> pd.DataFrame:
+    """Combine MSHA coal mines and EIA coal plants to find all qualifying areas.
+
+    Explode the ``adjacent_id_fips`` column into separate records of qualifying areas.
+
+    Args:
+        msha_df: The transformed MSHA data.
+        eia_df: The transformed EIA data.
+        census_geometry: The Census geometry level of qualifying areas. Must
+            be one of "state", "county", or "tract".
+    """
+    cols = [
+        f"{census_geometry}_id_fips",
+        f"{census_geometry}_name_census",
+        "latitude",
+        "longitude",
+        "geometry",
+        "qualifying_area",
+        "qualifying_criteria",
+        "adjacent_id_fips",
+    ]
+    msha_df = msha_df[cols]
+    eia_df = eia_df[cols]
+
+    adj_msha = _explode_adjacent_id_fips(
+        msha_df, census_geometry=census_geometry, closure_type="coalmine"
+    )
+    adj_eia = _explode_adjacent_id_fips(
+        eia_df, census_geometry=census_geometry, closure_type="coal_plant"
+    )
+
+    return pd.concat([msha_df, eia_df, adj_msha, adj_eia])

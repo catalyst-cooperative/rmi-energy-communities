@@ -7,7 +7,14 @@ import pkg_resources
 
 # In order for the package modules to be available when you import the package,
 # they need to be imported here somehow. Not sure if this is best practice though.
-from energy_comms import cli, extract, helpers, output, transform  # noqa: F401
+from energy_comms import (  # noqa: F401
+    cli,
+    coordinate,
+    extract,
+    helpers,
+    output,
+    transform,
+)
 
 REPO_DIR = Path(__file__).resolve().parent.parent.parent
 DATA_INPUTS = Path(REPO_DIR / "data_inputs")

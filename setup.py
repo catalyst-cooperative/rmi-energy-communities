@@ -110,7 +110,10 @@ setup(
     entry_points={
         "console_scripts": [
             # "script_name = dotted.module.path.to:main_script_function",
-            "winston = energy_comms.cli:main",
+            "get_all_qualifying_areas = energy_comms.cli:main",
+            "get_coal_qualifying_areas = energy_comms.cli:coal_criteria",
+            "get_brownfields_qualifying_areas = energy_comms.cli:brownfields_criteria",
+            "get_employment_qualifying_areas = energy_comms.cli:employment_criteria",
         ]
     },
 )

@@ -74,7 +74,7 @@ def transform(
         pudl_settings=pudl_settings,
     )
     df = df.assign(
-        qualifying_area="census_tract",
+        qualifying_area=f"{census_geometry}",
         qualifying_criteria="coal_plant",
     )
     return df

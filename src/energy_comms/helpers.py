@@ -3,6 +3,7 @@ import logging
 from typing import Any, Literal
 
 import geopandas
+import numpy as np
 import pandas as pd
 
 import pudl
@@ -153,4 +154,61 @@ def remove_invalid_lat_lon_records(
         longitude_col
     ].isnull()
     df = df[lon_filter]
+    return df
+
+
+def add_bls_qcew_geographic_level(df: pd.DataFrame) -> pd.DataFrame:
+    """Using BLS area codes, make a column indicating the geographic level of the record.
+
+    Geographic levels are counties, states, MSA, etc. In this case, since QCEW data
+    is filtered for county and MSA, only those geographic levels are found.
+
+    Args:
+        df: Dataframe to add geographic levels to. Probably the QCEW transformed data.
+    """
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("Statewide"), "state", None
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("Parish|City|Borough|County"),
+        "county",
+        df["geographic_level"],
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("MSA"),
+        "metropolitan_stat_area",
+        df["geographic_level"],
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("MicroSA"),
+        "micropolitan_stat_area",
+        df["geographic_level"],
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("(Combined)"),
+        "aggregated_stat_area",
+        df["geographic_level"],
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("TOTAL"), "nationwide", df["geographic_level"]
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("Unknown"),
+        "undefined",
+        df["geographic_level"],
+    )
+    """
+    # TODO: fix this, make state column
+    df[["area", "state"]] = df["area_title"].str.split(",", 1, expand=True)
+    df["state"] = np.where(
+        df["state"].isnull(),
+        df["area_title"].str.split("-- Statewide").str.get(0),
+        df["state"],
+    )
+    df["state"] = np.where(
+        df["state"].str.contains("MSA"),
+        df["area_title"].str.split(",").str.get(1),
+        df["state"],
+    )
+    """
     return df

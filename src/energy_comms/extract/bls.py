@@ -4,6 +4,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import zipfile
 from datetime import date
 
 import numpy as np
@@ -165,6 +166,9 @@ def download_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> N
     Note that the most recent year of data might not be available yet in which case a warning
     will be produced if the file cannot be downloaded.
 
+    Concatenates all QCEW data for counties and MSAs for each year in ``years`` and writes
+    this to another CSV in ``yearly_concatenated_csvs`` directory.
+
     Args:
         years: A list of years to download QCEW annual data for. Defaults to ``QCEW_YEARS``
             which is a list of years from 2010 to present.
@@ -173,6 +177,9 @@ def download_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> N
     """
     data_dir = energy_comms.DATA_INPUTS / "qcew"
     data_dir.mkdir(parents=True, exist_ok=True)
+    # separate directory for concatenated CSV for every year
+    yearly_concatenated_dir = data_dir / "yearly_concatenated_csvs"
+    yearly_concatenated_dir.mkdir(parents=True, exist_ok=True)
     for year in years:
         file_path = data_dir / f"{year}_annual_by_area.zip"
         if not (file_path.exists()) or update:
@@ -188,9 +195,43 @@ def download_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> N
                     logger.warning(
                         f"Could not download {year} QCEW data. It's likely not available yet."
                     )
-            else:
-                with open(file_path, "wb") as file:
-                    file.write(resp.content)
+                    continue
+            with open(file_path, "wb") as file:
+                file.write(resp.content)
+        # concatenate and write county and MSA data for the year to a separate CSV
+        with open(yearly_concatenated_dir / f"{year}_counties_msas.csv", "w") as fout:
+            logger.info(f"Writing {year} concatenated county and MSA data.")
+            with zipfile.ZipFile(data_dir / f"{year}_annual_by_area.zip", "r") as z:
+                skip_header = False
+                for filename in z.namelist():
+                    clean_name = filename.lower().strip().replace(" ", "_")
+                    # only get files with county or MSA records
+                    if "_county" in clean_name or "_msa" in clean_name:
+                        with z.open(filename, "r") as fin:
+                            text = io.TextIOWrapper(fin)
+                            if skip_header:
+                                next(text)
+                            fout.write(text.read())
+                            skip_header = True
+
+
+def read_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> pd.DataFrame:
+    """Read QCEW data in from CSVs to dataframe and concatenate all years."""
+    if update:
+        download_qcew_data(years=years)
+    df = pd.DataFrame()
+    for year in years:
+        logger.info(f"Reading {year} CSV data into pandas dataframe.")
+        df = pd.concat(
+            [
+                df,
+                pd.read_csv(
+                    energy_comms.DATA_INPUTS
+                    / f"qcew/yearly_concatenated_csvs/{year}_counties_msas.csv"
+                ),
+            ]
+        )
+    return df
 
 
 def extract_qcew_areas() -> pd.DataFrame:

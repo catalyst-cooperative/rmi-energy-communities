@@ -1,7 +1,10 @@
 """Transform functions for Bureau of Labor Statistics data for employment criteria."""
+import logging
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def transform_national_unemployment_rates(df: pd.DataFrame) -> pd.DataFrame:
@@ -51,15 +54,7 @@ def get_national_unemployment_annual_avg(raw_df: pd.DataFrame) -> pd.DataFrame:
     """
     df = transform_national_unemployment_rates(raw_df)
     # note the rounding bc BLS website specifies 1 sig figure
-    df = (
-        df.groupby("year")["national_unemployment_rate"]
-        .mean()
-        .round(1)
-        .reset_index()
-        .rename(
-            columns={"national_unemployment_rate": "avg_national_unemployment_rate"}
-        )
-    )
+    df = df.groupby("year")["national_unemployment_rate"].mean().round(1).reset_index()
     # IRA criteria specifies national unemployment rate of the previous year
     df["applies_to_criteria_year"] = df["year"] + 1
     return df
@@ -150,9 +145,6 @@ def get_local_area_unemployment_rates(
         .round(1)
         .reset_index()
     )
-    lau_df = lau_df.rename(
-        columns={"local_area_unemployment_rate": "avg_local_area_unemployment_rate"}
-    )
     # join on area information
     area_df = transform_lau_areas(raw_area_df)
     df = lau_df.merge(area_df, on="series_id", how="left")
@@ -196,7 +188,22 @@ def transform_msa_codes(df: pd.DataFrame) -> pd.DataFrame:
 
 def transform_qcew_areas(df: pd.DataFrame) -> pd.DataFrame:
     """Transform QCEW area information."""
-    df.columns = df.columns.str.strip().str.lower().replace(" ", "_")
+    df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
     df = df.astype("string")
+    df["area_fips"] = df["area_fips"].str.zfill(5)
+    return df
+
+
+def transform_qcew_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Transform the QCEW data."""
+    df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
+    df = df.astype(
+        {
+            "area_fips": "string",
+            "area_title": "string",
+            "industry_code": "string",
+            "own_code": "Int64",
+        }
+    )
     df["area_fips"] = df["area_fips"].str.zfill(5)
     return df

@@ -6,17 +6,18 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 # from link
-# https://www.epa.gov/re-powering/how-identify-sites#looking
 SOURCE_URL = "https://www.epa.gov/system/files/documents/2022-04/re-powering-screening-dataset-2022.xlsx"
 
 
 def extract() -> pd.DataFrame:
-    """Download brownfields site data from EPA source."""
+    """Download brownfields site data from EPA source.
+
+    See https://www.epa.gov/re-powering/how-identify-sites#looking for details on data.
+    """
     logger.info("Extracting EPA brownfields data.")
     # download area titles and convert to pandas dataframe
     sites_sheet_name = "re-powering sites"
     sheet_idx = None
-
     # read in sheet
     xl = pd.ExcelFile(SOURCE_URL)
 

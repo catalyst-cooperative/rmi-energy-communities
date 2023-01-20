@@ -35,9 +35,14 @@ setup(
     # In order for the dependabot to update versions, they must be listed here.
     # Use the format pkg_name>=x,<y", Included packages are just examples:
     install_requires=[
+        "beautifulsoup4>=4.11,<4.12",
+        "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
+        "geopandas>=0.11,<0.13",
         "pandas>=1.4,<1.5.4",
+        "plotly>=5.11,<5.12",
+        "pygeos>=0.11,<0.13",
+        "Shapely>1.8.0,<2.1",
         "sqlalchemy>=1.4,<1.4.47",
-        "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@main",
     ],
     extras_require={
         "dev": [
@@ -49,7 +54,7 @@ setup(
         "docs": [
             "doc8>=0.9,<1.2",  # Ensures clean documentation formatting
             "furo>=2022.4.7",
-            "sphinx>=4,!=5.1.0,<6.1.4",  # The default Python documentation engine
+            "sphinx>=4,!=5.1.0,<5.3.1",  # The default Python documentation engine
             "sphinx-autoapi>=1.8,<2.1",  # Generates documentation from docstrings
             "sphinx-issues>=1.2,<3.1",  # Allows references to GitHub issues
         ],
@@ -66,7 +71,6 @@ setup(
             "mccabe>=0.6,<0.8",  # Checks that code isn't overly complicated
             "mypy>=0.942,<0.992",  # Static type checking
             "pep8-naming>=0.12,<0.14",  # Require PEP8 compliant variable names
-            "plotly>=5.11.0,<5.13",  # Used for visualizations
             "pre-commit>=2.9,<2.22",  # Allow us to run pre-commit hooks in testing
             "pydocstyle>=5.1,<6.4",  # Style guidelines for Python documentation
             "pytest>=6.2,<7.3",  # Our testing framework
@@ -94,7 +98,6 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
     ],
     # Directory to search recursively for __init__.py files defining Python packages
     packages=find_packages("src"),
@@ -108,7 +111,10 @@ setup(
     entry_points={
         "console_scripts": [
             # "script_name = dotted.module.path.to:main_script_function",
-            "winston = energy_comms.cli:main",
+            "get_all_qualifying_areas = energy_comms.cli:main",
+            "get_coal_qualifying_areas = energy_comms.cli:coal_criteria",
+            "get_brownfields_qualifying_areas = energy_comms.cli:brownfields_criteria",
+            "get_employment_qualifying_areas = energy_comms.cli:employment_criteria",
         ]
     },
 )

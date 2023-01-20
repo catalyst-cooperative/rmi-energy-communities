@@ -13,6 +13,7 @@ def extract(pudl_engine: sa.engine.Engine | None = None) -> pd.DataFrame:
     """
     if pudl_engine is None:
         pudl_engine = sa.create_engine(pudl.workspace.setup.get_defaults()["pudl_db"])
+
     pudl_out = pudl.output.pudltabl.PudlTabl(pudl_engine, freq="AS")
     gens = pudl_out.gens_eia860()
     return gens

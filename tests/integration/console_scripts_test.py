@@ -13,7 +13,7 @@ ENTRY_POINTS = [
 
 @pytest.mark.parametrize("ep", ENTRY_POINTS)
 @pytest.mark.script_launch_mode("inprocess")
-def test_pudl_scripts(script_runner, ep: str) -> None:  # type: ignore
+def test_energy_comms_scripts(script_runner, ep: str) -> None:  # type: ignore
     """Run each deployed console script with --help as a basic test.
 
     The script_runner fixture is provided by the pytest-console-scripts plugin.
@@ -23,16 +23,14 @@ def test_pudl_scripts(script_runner, ep: str) -> None:  # type: ignore
 
 
 @pytest.mark.parametrize(
-    "alpha,beta",
+    "ca,ba",
     [
-        ("2", "2"),
-        pytest.param("a", "2", marks=pytest.mark.xfail),
-        pytest.param("2", "b", marks=pytest.mark.xfail),
-        pytest.param("a", "b", marks=pytest.mark.xfail),
+        pytest.param("area", "state", marks=pytest.mark.xfail),
+        pytest.param("tract", "area", marks=pytest.mark.xfail),
     ],
 )
 @pytest.mark.script_launch_mode("inprocess")
-def test_winston_args(script_runner, alpha: str, beta: str) -> None:  # type: ignore
-    """Try running the script with bad inputs."""
-    ret = script_runner.run("winston", "--alpha", alpha, "--beta", beta)
+def test_script_args(script_runner, ca: str, ba: str) -> None:  # type: ignore
+    """Try running the script with bad inputs for coal and brownfield geometry."""
+    ret = script_runner.run("get_all_qualifying_areas", "-ca", ca, "-ba", ba)
     assert ret.success  # nosec: B101

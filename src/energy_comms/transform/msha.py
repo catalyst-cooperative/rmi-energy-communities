@@ -70,5 +70,9 @@ def transform(
         add_adjacent_geoms=True,
         pudl_settings=pudl_settings,
     )
+    df = df.assign(
+        qualifying_area=f"{census_geometry}",
+        qualifying_criteria="coalmine",
+    )
 
     return df

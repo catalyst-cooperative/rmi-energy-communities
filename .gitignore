@@ -1,5 +1,4 @@
-RFF_energy_communities_script
-inputs/
+data_inputs/
 
 **/*.DS_Store*
 .vscode

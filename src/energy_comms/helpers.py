@@ -3,6 +3,7 @@ import logging
 from typing import Any, Literal
 
 import geopandas
+import numpy as np
 import pandas as pd
 
 import pudl
@@ -153,4 +154,60 @@ def remove_invalid_lat_lon_records(
         longitude_col
     ].isnull()
     df = df[lon_filter]
+    return df
+
+
+def add_bls_qcew_geo_cols(qcew_df: pd.DataFrame) -> pd.DataFrame:
+    """Using BLS area codes, make a column indicating the geographic level of the record.
+
+    Geographic levels are counties, states, MSA, etc. In this case, since QCEW data
+    is filtered for county and MSA, only those geographic levels are found.
+
+    Args:
+        qcew_df: Dataframe to add geographic levels to. Probably the QCEW transformed data.
+    """
+    df = qcew_df.copy()
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("Statewide"), "state", pd.NA
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("Parish|City|Borough|County"),
+        "county",
+        df["geographic_level"],
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("MSA"),
+        "metropolitan_stat_area",
+        df["geographic_level"],
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("MicroSA"),
+        "micropolitan_stat_area",
+        df["geographic_level"],
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("(Combined)"),
+        "aggregated_stat_area",
+        df["geographic_level"],
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("TOTAL"), "nationwide", df["geographic_level"]
+    )
+    df["geographic_level"] = np.where(
+        df["area_title"].str.contains("Unknown"),
+        "undefined",
+        df["geographic_level"],
+    )
+
+    # add geoid column
+    df["geoid"] = df["area_fips"]
+    # to go from MSA code to MSA geoid
+    # take out C in MSA records and append extra 0
+    df["geoid"] = df["geoid"].str.replace("C", "")
+    # for MSAs, make geoid to match census crosswalk
+    df["geoid"] = np.where(
+        df["geographic_level"] == "metropolitan_stat_area",
+        df["geoid"] + "0",
+        df["geoid"],
+    )
     return df

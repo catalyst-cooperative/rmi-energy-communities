@@ -154,7 +154,7 @@ def employment_criteria_qualifying_areas(
     df["qualifying_criteria"] = "fossil_fuel_employment"
     df["qualifying_area"] = "MSA or non-MSA"
     df = df.rename(columns={"area_title": "census_name"})
-    df[
+    df = df[
         [
             "census_name",
             "county_id_fips",

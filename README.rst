@@ -76,7 +76,7 @@ criteria they qualify by, you can run:
 .. code:: bash
 
    get_all_qualifying_areas --coal_area tract --brownfields_area tract  --output_filepath all_qualifying_areas.pkl
-   
+
 To get just the states, counties, or census tracts that qualify under the coal
 closures community criteria run:
 

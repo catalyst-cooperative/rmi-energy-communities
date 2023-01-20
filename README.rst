@@ -51,8 +51,9 @@ running inside of a ``conda`` environment) clones the entire history of the
 repository containing the package being installed. How long it takes will depend on
 the speed of your network connection. It might take ~5 minutes.
 
-You will need a pre-processed data archive for PUDL to access. When you extract
-that archive you will need to tell PUDL where to find by putting the path to
+To generate the outputs in this repo you will need a pre-processed data archive for
+PUDL to access. When you extract that archive you will need to tell PUDL where to
+find it by putting the path to
 that data in a file called ``.pudl.yml`` in your home directory.
 For more instructions on setting up PUDL with the necessary data and settings
 to generate the outputs in this repo, you can
@@ -61,8 +62,8 @@ to generate the outputs in this repo, you can
 Generating Outputs
 ==================
 
-To generate output dataframes of qualifying energy community areas you can run the
-following commands from your command line once the ``energy_comms`` package is
+To generate output dataframes of the qualifying energy community areas you can run
+the following commands from your command line once the ``energy_comms`` package is
 installed. For more information about what these qualifying criteria mean, see the
 below section on IRA criteria.
 
@@ -70,19 +71,28 @@ Note that for the coal closure and brownfields criteria you can specify the
 census geometry area that qualifies for the criteria e.g. tract, county, state.
 
 To save a pickled dataframe of all areas that qualify as an energy community and the
-criteria by run:
+criteria they qualify by, you can run:
 
 .. code:: bash
 
    get_all_qualifying_areas --coal_area tract --brownfields_area tract  --output_filepath all_qualifying_areas.pkl
+   
+To get just the states, counties, or census tracts that qualify under the coal
+closures community criteria run:
 
 .. code:: bash
 
-   get_coal_qualifying_areas --output_filepath coal_qualifying_areas.pkl
+   get_coal_qualifying_areas --coal_area tract --output_filepath coal_qualifying_areas.pkl
+
+To get the states, counties, or census tract that qualify under the
+brownfields criteria run:
 
 .. code:: bash
 
-   get_brownfields_qualifying_areas
+   get_brownfields_qualifying_areas --brownfields_area tract
+
+To get the metropolitan statistical areas and non-metropolitan statistical
+areas that qualify under the employment criteria run:
 
 .. code:: bash
 

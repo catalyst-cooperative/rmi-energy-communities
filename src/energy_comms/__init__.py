@@ -11,6 +11,7 @@ from energy_comms import (  # noqa: F401
     cli,
     coordinate,
     extract,
+    generate_qualifying_areas,
     helpers,
     output,
     transform,

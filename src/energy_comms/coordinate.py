@@ -25,7 +25,7 @@ def get_coal_criteria_qualifying_areas(
     eia_df = energy_comms.transform.eia860.transform(
         eia_raw_df, census_geometry=census_geometry
     )
-    df = energy_comms.output.generate_qualifying_areas.coal_plant_mine_criteria_qualifying_areas(
+    df = energy_comms.generate_qualifying_areas.coal_criteria_qualifying_areas(
         msha_df=msha_df, eia_df=eia_df, census_geometry=census_geometry
     )
     return df
@@ -47,6 +47,7 @@ def get_brownfields_criteria_qualifying_areas(
     cols = [
         f"{census_geometry}_id_fips",
         f"{census_geometry}_name_census",
+        "site_name",
         "latitude",
         "longitude",
         "geometry",
@@ -54,6 +55,7 @@ def get_brownfields_criteria_qualifying_areas(
         "qualifying_criteria",
     ]
     df = epa_df[cols]
+    df = df.rename(columns={f"{census_geometry}_name_census": "census_name"})
     return df
 
 
@@ -72,9 +74,13 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
     fossil_employment_df = pd.DataFrame()
     for year in QCEW_YEARS:
         year_df = energy_comms.extract.bls.extract_qcew_data(years=[year])
+        if year_df.empty:
+            continue
         year_df = energy_comms.transform.bls.transform_qcew_data(year_df)
-        year_df = energy_comms.output.generate_qualifying_areas.fossil_employment_qualifying_areas(
-            year_df, msa_df
+        year_df = (
+            energy_comms.generate_qualifying_areas.fossil_employment_qualifying_areas(
+                year_df, msa_df
+            )
         )
         fossil_employment_df = pd.concat([fossil_employment_df, year_df])
 
@@ -88,12 +94,14 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
     lau_df = energy_comms.transform.bls.transform_local_area_unemployment_rates(
         lau_raw_df, lau_area_raw_df
     )
-    unemployment_df = energy_comms.output.generate_qualifying_areas.unemployment_rate_qualifying_areas(
-        cps_df, lau_df
+    unemployment_df = (
+        energy_comms.generate_qualifying_areas.unemployment_rate_qualifying_areas(
+            cps_df, lau_df
+        )
     )
 
     # bring these dataframes together to get full employment criteria
-    df = energy_comms.output.generate_qualifying_areas.employment_criteria_qualifying_areas(
+    df = energy_comms.generate_qualifying_areas.employment_criteria_qualifying_areas(
         fossil_employment_df=fossil_employment_df, unemployment_df=unemployment_df
     )
 

@@ -134,22 +134,41 @@ def employment_criteria_qualifying_areas(
     unemployment_df = unemployment_df[
         unemployment_df["meets_unemployment_threshold"] == 1
     ]
+    # drop column for no overlap with fossil df
+    unemployment_df = unemployment_df.drop(
+        columns=[
+            "state_id_fips",
+        ]
+    )
     df = fossil_employment_df.merge(
         unemployment_df,
         on=["geoid", "year"],
         how="left",
     )
     df = df.fillna({"meets_unemployment_threshold": 0})
-    qualifying_areas = df[
+    df = df[
         (df["meets_fossil_employment_threshold"] == 1)
         & (df["meets_unemployment_threshold"] == 1)
     ]
-    qualifying_areas = qualifying_areas.drop_duplicates(subset=["geoid"])
-    qualifying_areas["qualifying_criteria"] = "fossil_fuel_employment"
-    qualifying_areas["qualifying_area"] = "MSA or non-MSA"
-    return qualifying_areas
+    df = df.drop_duplicates(subset=["geoid"])
+    df["qualifying_criteria"] = "fossil_fuel_employment"
+    df["qualifying_area"] = "MSA or non-MSA"
+    df = df.rename(columns={"area_title": "census_name"})
+    df[
+        [
+            "census_name",
+            "county_id_fips",
+            "state_id_fips",
+            "state",
+            "geoid",
+            "qualifying_criteria",
+            "qualifying_area",
+        ]
+    ]
+    return df
 
 
+# TODO: merge on names of the geometry
 def _explode_adjacent_id_fips(
     df: pd.DataFrame,
     census_geometry: Literal["state", "county", "tract"] = "tract",
@@ -158,12 +177,12 @@ def _explode_adjacent_id_fips(
     adj_records = pd.DataFrame()
     adj_records[f"{census_geometry}_id_fips"] = df.adjacent_id_fips.explode()
     adj_records["qualifying_area"] = f"{census_geometry}"
-    adj_records["criteria"] = f"{closure_type}_adjacent_tract"
+    adj_records["qualifying_criteria"] = f"{closure_type}_adjacent_{census_geometry}"
     adj_records = adj_records.drop_duplicates()
     return adj_records
 
 
-def coal_plant_mine_criteria_qualifying_areas(
+def coal_criteria_qualifying_areas(
     msha_df: pd.DataFrame,
     eia_df: pd.DataFrame,
     census_geometry: Literal["state", "county", "tract"] = "tract",
@@ -178,9 +197,22 @@ def coal_plant_mine_criteria_qualifying_areas(
         census_geometry: The Census geometry level of qualifying areas. Must
             be one of "state", "county", or "tract".
     """
+    msha_df = msha_df.rename(
+        columns={
+            f"{census_geometry}_name_census": "census_name",
+            "current_mine_name": "site_name",
+        }
+    )
+    eia_df = eia_df.rename(
+        columns={
+            f"{census_geometry}_name_census": "census_name",
+            "plant_name_eia": "site_name",
+        }
+    )
     cols = [
         f"{census_geometry}_id_fips",
-        f"{census_geometry}_name_census",
+        "census_name",
+        "site_name",
         "latitude",
         "longitude",
         "geometry",
@@ -198,4 +230,5 @@ def coal_plant_mine_criteria_qualifying_areas(
         eia_df, census_geometry=census_geometry, closure_type="coal_plant"
     )
 
-    return pd.concat([msha_df, eia_df, adj_msha, adj_eia])
+    df = pd.concat([msha_df, eia_df, adj_msha, adj_eia])
+    return df

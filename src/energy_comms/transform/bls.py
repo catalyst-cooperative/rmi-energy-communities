@@ -46,6 +46,7 @@ def transform_national_unemployment_rates(df: pd.DataFrame) -> pd.DataFrame:
     df = df.groupby("year")["national_unemployment_rate"].mean().round(1).reset_index()
     # IRA criteria specifies national unemployment rate of the previous year
     df["applies_to_criteria_year"] = df["year"] + 1
+    df = df.rename(columns={"year": "real_year"})
 
     return df
 
@@ -98,7 +99,7 @@ def transform_lau_areas(raw_df: pd.DataFrame) -> pd.DataFrame:
     df["geoid"] = np.where(
         df["geographic_level"] == "county",
         df["area_code"].str[2:7],
-        df["area_code"].str[4:10],
+        df["area_code"].str[4:9],
     )
     # construct the local area unemployment series ID
     df["series_id"] = np.where(

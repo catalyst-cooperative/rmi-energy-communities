@@ -82,8 +82,10 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
     cps_raw_df = energy_comms.extract.bls.extract_national_unemployment_rates()
     lau_raw_df = energy_comms.extract.bls.extract_lau_rates(update=update)
     lau_area_raw_df = energy_comms.extract.bls.extract_lau_area_table(update=update)
-    cps_df = energy_comms.transform.bls.get_national_unemployment_annual_avg(cps_raw_df)
-    lau_df = energy_comms.transform.bls.get_local_area_unemployment_rates(
+    cps_df = energy_comms.transform.bls.transform_national_unemployment_rates(
+        cps_raw_df
+    )
+    lau_df = energy_comms.transform.bls.transform_local_area_unemployment_rates(
         lau_raw_df, lau_area_raw_df
     )
     unemployment_df = energy_comms.output.generate_qualifying_areas.unemployment_rate_qualifying_areas(

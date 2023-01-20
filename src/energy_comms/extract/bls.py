@@ -135,6 +135,9 @@ def extract_lau_footnote_table(update: bool = False) -> pd.DataFrame:
 def extract_msa_codes() -> pd.DataFrame:
     """Extract code definitions of Metropolitan Statistical Areas.
 
+    Gives codes and names for Metropolitan Statistical Areas and
+    non-Metropolitan Statistical Areas.
+
     See https://www.bls.gov/oes/current/msa_def.htm for more details.
     """
     resp = requests.get(MSA_URL)

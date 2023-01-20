@@ -4,20 +4,22 @@ import logging
 import numpy as np
 import pandas as pd
 
+import energy_comms
+
 logger = logging.getLogger(__name__)
 
 
 def transform_national_unemployment_rates(df: pd.DataFrame) -> pd.DataFrame:
-    """Clean the raw national unemployment rate data.
+    """Clean the raw national unemployment rate data and get annual avg for each year.
 
-    Strip and lower column names, enforce types, rename columns.
+    Strip and lower column names, enforce types, rename columns. Groupby year
+    and get the annual average unemployment rate.
 
     Args:
         df: The raw dataframe extracted from BLS website.
 
     Returns:
-        Cleaned version of the national unemployment rates dataframe
-        with no columns lost.
+        Dataframe with the annual average national unemployment rate.
     """
     df.columns = df.columns.str.strip().str.lower()
     df["series_id"] = df["series_id"].str.strip()
@@ -39,28 +41,16 @@ def transform_national_unemployment_rates(df: pd.DataFrame) -> pd.DataFrame:
     )
     # other values like averages could be included with other period values
     df = df[(df.period >= "M01") & (df.period <= "M12")]
-
-    return df
-
-
-def get_national_unemployment_annual_avg(raw_df: pd.DataFrame) -> pd.DataFrame:
-    """Clean the raw national unemployment data, get the annual average for each year.
-
-    Args:
-        raw_df: The raw dataframe extracted from BLS website.
-
-    Returns:
-        Dataframe with the annual average national unemployment rate (and nothing else)
-    """
-    df = transform_national_unemployment_rates(raw_df)
+    # now take the annual average
     # note the rounding bc BLS website specifies 1 sig figure
     df = df.groupby("year")["national_unemployment_rate"].mean().round(1).reset_index()
     # IRA criteria specifies national unemployment rate of the previous year
     df["applies_to_criteria_year"] = df["year"] + 1
+
     return df
 
 
-def transform_lau_rates(df: pd.DataFrame) -> pd.DataFrame:
+def transform_lau_table(df: pd.DataFrame) -> pd.DataFrame:
     """Transform local area unemployment rates data."""
     df.columns = df.columns.str.strip().str.lower()
     df["series_id"] = df["series_id"].str.strip()
@@ -89,6 +79,8 @@ def transform_lau_areas(raw_df: pd.DataFrame) -> pd.DataFrame:
     Construct the BLS series ID for records that refer to a county
     or metropolitan statistical area. Add state FIPS ID column and
     and geo ID column.
+
+    This table gives the area name for the LAU data.
     """
     df = raw_df.copy()
     df.columns = df.columns.str.strip().str.lower()
@@ -103,7 +95,7 @@ def transform_lau_areas(raw_df: pd.DataFrame) -> pd.DataFrame:
     df["state_id_fips"] = df["area_code"].str[2:4]
     df["geoid"] = np.where(
         df["geographic_level"] == "county",
-        df["area_code"].str[4:7],
+        df["area_code"].str[2:7],
         df["area_code"].str[4:10],
     )
     # construct the local area unemployment series ID
@@ -113,11 +105,12 @@ def transform_lau_areas(raw_df: pd.DataFrame) -> pd.DataFrame:
         "LAU" + df["area_code"].str[:10],
     )
     df["series_id"] = df["series_id"].str.pad(width=18, side="right", fillchar="0")
+    # 03 is the unemployment rate code
     df["series_id"] = df["series_id"] + "03"
     return df
 
 
-def get_local_area_unemployment_rates(
+def transform_local_area_unemployment_rates(
     raw_lau_df: pd.DataFrame, raw_area_df: pd.DataFrame
 ) -> pd.DataFrame:
     """Get the annual average local unemployment rate and area information.
@@ -133,7 +126,7 @@ def get_local_area_unemployment_rates(
         Dataframe giving the annual average unemployment rate for counties
         and metropolitan statistical areas.
     """
-    lau_df = transform_lau_rates(raw_lau_df)
+    lau_df = transform_lau_table(raw_lau_df)
     # take an annual average, didn't use M13 here because it is null
     # (footnote code U) when any monthly value is missing (footnote code N)
     # but maybe it's best ot use M13 and not interpolate annual average
@@ -155,7 +148,9 @@ def get_local_area_unemployment_rates(
 def transform_msa_codes(df: pd.DataFrame) -> pd.DataFrame:
     """Transform dataframe of MSA codes and names.
 
-    Clean column names, enforce string types, construct FIPS codes and geoid.
+    Clean column names, enforce string types, pad FIPS codes with 0s,
+    construct geoid. Geoid is five digit fips for nonmetropolitan stat
+    areas and the five digit MSA code for metropolitan stat areas.
     """
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
     col_rename_dict = {
@@ -187,7 +182,7 @@ def transform_msa_codes(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# TODO: what is data used for?
+# TODO: what is data used for? only gives table of area_fips to area_title
 def transform_qcew_areas(df: pd.DataFrame) -> pd.DataFrame:
     """Transform QCEW area information."""
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
@@ -208,4 +203,16 @@ def transform_qcew_data(df: pd.DataFrame) -> pd.DataFrame:
         }
     )
     df["area_fips"] = df["area_fips"].str.zfill(5)
-    return df
+    # add geographic level and geoid column
+    df = energy_comms.helpers.add_bls_qcew_geo_cols(df)
+    cols = [
+        "area_fips",
+        "area_title",
+        "year",
+        "industry_code",
+        "own_code",
+        "annual_avg_emplvl",
+        "geographic_level",
+        "geoid",
+    ]
+    return df[cols]

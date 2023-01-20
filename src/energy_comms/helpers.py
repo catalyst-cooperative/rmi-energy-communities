@@ -201,7 +201,8 @@ def add_bls_qcew_geo_cols(qcew_df: pd.DataFrame) -> pd.DataFrame:
 
     # add geoid column
     df["geoid"] = df["area_fips"]
-    # take out C in MSA records to add extra 0
+    # to go from MSA code to MSA geoid (akin to FIPS)
+    # take out C in MSA records and append extra 0
     df["geoid"] = df["geoid"].str.replace("C", "")
     # for MSAs, make geoid to match census crosswalk
     df["geoid"] = np.where(

@@ -41,6 +41,7 @@ setup(
         "pandas>=1.4,<1.5.3",
         "plotly>=5.11,<5.12",
         "pygeos>=0.11,<0.13",
+        "Shapely>1.8.0,<2.1",
         "sqlalchemy>=1.4,<1.4.46",
     ],
     extras_require={

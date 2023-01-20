@@ -93,6 +93,8 @@ def transform_lau_areas(raw_df: pd.DataFrame) -> pd.DataFrame:
         df.area_code.str[:2] == "CN", "county", "metropolitan_stat_area"
     )
     df["state_id_fips"] = df["area_code"].str[2:4]
+    # construct geoid which will be used to merge with
+    # records from fossil employment dataframe
     df["geoid"] = np.where(
         df["geographic_level"] == "county",
         df["area_code"].str[2:7],
@@ -172,7 +174,8 @@ def transform_msa_codes(df: pd.DataFrame) -> pd.DataFrame:
     df["state_id_fips"] = df["state_id_fips"].str.zfill(2)
     df["county_id_fips"] = df["county_id_fips"].str.zfill(3)
     df["township_id_fips"] = df["township_id_fips"].str.zfill(3)
-    # construct geoid
+    # construct geoid which will be used to merge with
+    # records from unemployment criteria dataframe
     df["geoid"] = np.where(
         df["msa_name"].str.contains("nonmetropolitan"),
         df["state_id_fips"] + df["county_id_fips"],

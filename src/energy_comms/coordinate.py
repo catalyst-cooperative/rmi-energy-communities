@@ -96,8 +96,7 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
     df = energy_comms.output.generate_qualifying_areas.employment_criteria_qualifying_areas(
         fossil_employment_df=fossil_employment_df, unemployment_df=unemployment_df
     )
-    # TODO: fix this instead of renaming
-    df = df.rename(columns={"full_county_id_fips": "county_id_fips"}).reset_index()
+
     return df
 
 

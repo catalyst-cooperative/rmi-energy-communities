@@ -117,13 +117,17 @@ def employment_criteria_qualifying_areas(
 ) -> pd.DataFrame:
     """Combine employment criteria dataframes to find all qualifying areas.
 
+    The dataframes from each criteria are merged on the `geoid` column.
+    The `geoid` is all numeric and five digits. It is the full county FIPS code for
+    counties and nonmetropolitan statistical areas and is a five digit numeric MSA code
+    for metropolitan statistical areas.
+
     Args:
         fossil_employment_df: Qualifying areas for fossil employment criteria.
             Result of ``fossil_employment_qualifying_areas``.
         unemployment_df: Qualifying areas for unemployment criteria. Result of
             ``unemployment_rate_qualifying_areas``.
     """
-    # TODO: correct? merge on just county_id_fips even if geographic_level doesn't match?
     fossil_employment_df = fossil_employment_df[
         fossil_employment_df["meets_fossil_employment_threshold"] == 1
     ]

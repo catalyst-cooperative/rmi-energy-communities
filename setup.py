@@ -38,11 +38,11 @@ setup(
         "beautifulsoup4>=4.11,<4.12",
         "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
         "geopandas>=0.11,<0.13",
-        "pandas>=1.4,<1.5.3",
+        "pandas>=1.4,<1.5.4",
         "plotly>=5.11,<5.12",
         "pygeos>=0.11,<0.13",
         "Shapely>1.8.0,<2.1",
-        "sqlalchemy>=1.4,<1.4.46",
+        "sqlalchemy>=1.4,<1.4.47",
     ],
     extras_require={
         "dev": [

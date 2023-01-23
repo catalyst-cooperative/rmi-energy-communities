@@ -39,7 +39,7 @@ setup(
         "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
         "geopandas>=0.11,<0.13",
         "pandas>=1.4,<1.5.4",
-        "plotly>=5.11,<5.12",
+        "plotly>=5.11,<5.13",
         "pygeos>=0.11,<0.13",
         "Shapely>1.8.0,<2.1",
         "sqlalchemy>=1.4,<1.4.47",

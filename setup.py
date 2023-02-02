@@ -42,7 +42,7 @@ setup(
         "plotly>=5.11,<5.14",
         "pygeos>=0.11,<0.15",
         "Shapely>1.8.0,<2.1",
-        "sqlalchemy>=1.4,<2.0.1",
+        "sqlalchemy>=1.4,<2.0.2",
     ],
     extras_require={
         "dev": [

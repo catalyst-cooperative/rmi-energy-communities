@@ -68,8 +68,8 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
     """
     # start with fossil fuel employment criteria
     energy_comms.extract.bls.download_qcew_data(update=update)
-    msa_raw_df = energy_comms.extract.bls.extract_msa_codes()
-    msa_df = energy_comms.transform.bls.transform_msa_codes(msa_raw_df)
+    msa_raw_df = energy_comms.extract.bls.extract_msa_county_crosswalk()
+    msa_df = energy_comms.transform.bls.transform_msa_county_crosswalk(msa_raw_df)
     # do one year at a time so the concatenated dataframe isn't as big
     fossil_employment_df = pd.DataFrame()
     for year in QCEW_YEARS:
@@ -96,7 +96,7 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
     )
     unemployment_df = (
         energy_comms.generate_qualifying_areas.unemployment_rate_qualifying_areas(
-            cps_df, lau_df
+            cps_df, lau_df, msa_df
         )
     )
 

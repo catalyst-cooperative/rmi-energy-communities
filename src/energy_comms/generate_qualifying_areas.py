@@ -1,7 +1,7 @@
 """Combine the data sources to find qualifying areas."""
 
 import logging
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -159,7 +159,9 @@ def unemployment_rate_qualifying_areas(
 
 
 def employment_criteria_qualifying_areas(
-    fossil_employment_df: pd.DataFrame, unemployment_df: pd.DataFrame
+    fossil_employment_df: pd.DataFrame,
+    unemployment_df: pd.DataFrame,
+    pudl_settings: dict[Any, Any] | None = None,
 ) -> pd.DataFrame:
     """Combine employment criteria dataframes to find all qualifying areas.
 
@@ -173,6 +175,9 @@ def employment_criteria_qualifying_areas(
             Result of ``fossil_employment_qualifying_areas``.
         unemployment_df: Qualifying areas for unemployment criteria. Result of
             ``unemployment_rate_qualifying_areas``.
+        pudl_settings: Default is None. Used for adding geometry column onto dataframe.
+            A dictionary of PUDL settings, including paths to various resources like the
+            Census DP1 SQLite database. If None, the user defaults are used.
     """
     fossil_employment_df = fossil_employment_df[
         fossil_employment_df["meets_fossil_employment_threshold"] == 1
@@ -187,7 +192,11 @@ def employment_criteria_qualifying_areas(
     )
     df = df[~(df.meets_unemployment_threshold.isnull())]
     df = df.drop_duplicates(subset=["geoid"])
-    df = energy_comms.helpers.add_state_info(df, "county_id_fips")
+    df = energy_comms.helpers.add_state_info(df, "county_id_fips").pipe(
+        energy_comms.helpers.add_geometry_column,
+        census_geometry="county",
+        pudl_settings=pudl_settings,
+    )
     df["qualifying_criteria"] = "fossil_fuel_employment"
     df["qualifying_area"] = "MSA"
     df = df.rename(columns={"county_title": "county_name"})

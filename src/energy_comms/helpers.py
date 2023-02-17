@@ -10,6 +10,57 @@ import pudl
 logger = logging.getLogger(__name__)
 
 
+def add_geometry_column(
+    df: pd.DataFrame,
+    census_geometry: Literal["state", "county", "tract"] = "county",
+    pudl_settings: dict[Any, Any] | None = None,
+    census_gdf: geopandas.GeoDataFrame | None = None,
+    add_name: bool = False,
+) -> geopandas.GeoDataFrame:
+    """Add a geometry column to a dataframe to make it a GeoDataFrame.
+
+    Prepare a dataframe for mapping by adding a geometry column for the
+    area represented by each record. Dataframe must have column with the
+    FIPS ID for each record at the level of ``census_geometry`` e.g.
+    county_id_fips.
+
+    Args:
+        df (pd.DataFrame): The dataframe that a column named "geometry" will be
+            added onto. Must have a string type FIPS column, named state_id_fips,
+            county_id_fips, or tract_id_fips that corresponds to the level of
+            ``census_geometry``.
+        census_geometry (str): Which set of Census geometries to read, must be one
+                of "state", "county", or "tract".
+        pudl_settings (dict or None): A dictionary of PUDL settings, including
+            paths to various resources like the Census DP1 SQLite database. If
+            None, the user defaults are used.
+        census_gdf (geopandas.GeoDataFrame): A dataframe of Census geometries containing columns
+            for geometry, geoid10 (FIPS code), and name. If None (the default),
+            this dataframe is generated from ``pudl.output.censusdp1tract.get_layer()``
+        add_name (boolean): Whether to add a column with the name of the geometry, e.g.
+            "Jones County" or "Census Tract 123"
+    """
+    col_names = {
+        "state": {"geoid10": "state_id_fips", "stusps10": "state_name"},
+        "county": {"geoid10": "county_id_fips", "namelsad10": "county_name"},
+        "tract": {"geoid10": "tract_id_fips", "namelsad10": "tract_name"},
+    }
+    if census_gdf is None:
+        census_gdf = pudl.output.censusdp1tract.get_layer(
+            layer=census_geometry, pudl_settings=pudl_settings
+        )
+    census_gdf = census_gdf.rename(columns=col_names[census_geometry])
+    geo_cols = ["geometry", f"{census_geometry}_id_fips"]
+    if add_name:
+        geo_cols += [f"{census_geometry}_name"]
+    gdf = df.merge(
+        census_gdf[geo_cols],
+        how="left",
+        on=f"{census_geometry}_id_fips",
+    )
+    return gdf
+
+
 def get_geometry_intersection(
     gdf: geopandas.GeoDataFrame,
     census_geometry: Literal["state", "county", "tract"],
@@ -48,7 +99,6 @@ def get_geometry_intersection(
             ``adjacent_id_fips`` is added, giving a list of geometries adjacent to the record.
     """
     logger.info("Finding intersecting Census geometries.")
-    output = gdf.copy()
     col_names = {
         "state": {"geoid10": "state_id_fips", "stusps10": "state_name"},
         "county": {"geoid10": "county_id_fips", "namelsad10": "county_name"},
@@ -58,14 +108,14 @@ def get_geometry_intersection(
         census_gdf = pudl.output.censusdp1tract.get_layer(
             layer=census_geometry, pudl_settings=pudl_settings
         )
-    if output.crs is None:
-        output = output.set_crs(census_gdf.crs)
-    elif output.crs != census_gdf.crs:
+    if gdf.crs is None:
+        gdf = gdf.set_crs(census_gdf.crs)
+    elif gdf.crs != census_gdf.crs:
         logger.info(
-            f"Converting geodataframe CRS {output.crs} to match Census geodataframe CRS {census_gdf.crs}"
+            f"Converting geodataframe CRS {gdf.crs} to match Census geodataframe CRS {census_gdf.crs}"
         )
-        output = output.to_crs(census_gdf.crs)
-    output = output.sjoin(
+        gdf = gdf.to_crs(census_gdf.crs)
+    output = gdf.sjoin(
         census_gdf[["geometry"] + list(col_names[census_geometry].keys())],
         how="left",
         predicate="intersects",

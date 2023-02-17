@@ -210,6 +210,7 @@ def employment_criteria_qualifying_areas(
             "geoid",
             "qualifying_criteria",
             "qualifying_area",
+            "geometry",
         ]
     ]
     return df

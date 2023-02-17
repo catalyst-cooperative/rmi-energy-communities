@@ -50,9 +50,9 @@ def get_geometry_intersection(
     logger.info("Finding intersecting Census geometries.")
     output = gdf.copy()
     col_names = {
-        "state": {"geoid10": "state_id_fips", "stusps10": "state_name_census"},
-        "county": {"geoid10": "county_id_fips", "namelsad10": "county_name_census"},
-        "tract": {"geoid10": "tract_id_fips", "namelsad10": "tract_name_census"},
+        "state": {"geoid10": "state_id_fips", "stusps10": "state_name"},
+        "county": {"geoid10": "county_id_fips", "namelsad10": "county_name"},
+        "tract": {"geoid10": "tract_id_fips", "namelsad10": "tract_name"},
     }
     if census_gdf is None:
         census_gdf = pudl.output.censusdp1tract.get_layer(

@@ -16,15 +16,15 @@ def strip_lower_str_cols(df: pd.DataFrame, str_cols: list[str]) -> pd.DataFrame:
 
 def transform(
     df: pd.DataFrame,
-    census_geometry: Literal["state", "county", "tract"] = "tract",
+    census_geometry: Literal["county", "tract"] = "tract",
     pudl_settings: dict[Any, Any] | None = None,
 ) -> pd.DataFrame:
     """Standardize columns, filter for IRA coal mine criteria, join to census geometry.
 
     Arguments:
         df (pd.DataFrame): Raw MSHA mines dataframe
-        census_geometry (str): Which set of Census geometries to read, must be one
-            of "state", "county", or "tract".
+        census_geometry (str): Which set of Census geometries to read, must be
+            "county" or "tract".
         pudl_settings (dict or None): A dictionary of PUDL settings, including
             paths to various resources like the Census DP1 SQLite database. If
             None, the user defaults are used.

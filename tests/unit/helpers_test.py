@@ -68,7 +68,7 @@ def test_geometry_intersections(test_dir: pathlib.Path) -> None:
             "latitude",
             "geometry",
             "tract_id_fips",
-            "tract_name_census",
+            "tract_name",
             "adjacent_id_fips",
         ],
         crs="EPSG:4269",

@@ -34,7 +34,7 @@ def test_pudl_engine(pudl_engine_fixture: dict[Any, Any], table_name: str) -> No
     [("tract"), ("county")],
 )
 def test_msha_etl(
-    census_res: Literal["state", "county", "tract"],
+    census_res: Literal["county", "tract"],
     pudl_settings_fixture: dict[Any, Any] | None,
 ) -> None:
     """Verify that we can ETL the MSHA data."""
@@ -58,7 +58,7 @@ def test_msha_etl(
 def test_eia860_etl(
     pudl_engine_fixture: sa.engine.Engine,
     pudl_settings_fixture: dict[Any, Any] | None,
-    census_res: Literal["state", "county", "tract"],
+    census_res: Literal["county", "tract"],
 ) -> None:
     """Verify that we can ETL the EIA 860 data."""
     raw_df = energy_comms.extract.eia860.extract(pudl_engine=pudl_engine_fixture)

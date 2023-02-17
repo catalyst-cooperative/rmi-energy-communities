@@ -209,7 +209,7 @@ def employment_criteria_qualifying_areas(
 # TODO: merge on names of the geometry
 def _explode_adjacent_id_fips(
     df: pd.DataFrame,
-    census_geometry: Literal["state", "county", "tract"] = "tract",
+    census_geometry: Literal["county", "tract"] = "tract",
     closure_type: str = "coalmine",
 ) -> pd.DataFrame:
     adj_records = pd.DataFrame()
@@ -223,7 +223,7 @@ def _explode_adjacent_id_fips(
 def coal_criteria_qualifying_areas(
     msha_df: pd.DataFrame,
     eia_df: pd.DataFrame,
-    census_geometry: Literal["state", "county", "tract"] = "tract",
+    census_geometry: Literal["county", "tract"] = "tract",
 ) -> pd.DataFrame:
     """Combine MSHA coal mines and EIA coal plants to find all qualifying areas.
 
@@ -233,40 +233,46 @@ def coal_criteria_qualifying_areas(
         msha_df: The transformed MSHA data.
         eia_df: The transformed EIA data.
         census_geometry: The Census geometry level of qualifying areas. Must
-            be one of "state", "county", or "tract".
+            be "county" or "tract".
     """
     msha_df = msha_df.rename(
         columns={
-            f"{census_geometry}_name_census": "census_name",
             "current_mine_name": "site_name",
         }
     )
     eia_df = eia_df.rename(
         columns={
-            f"{census_geometry}_name_census": "census_name",
             "plant_name_eia": "site_name",
         }
     )
-    cols = [
-        f"{census_geometry}_id_fips",
-        "census_name",
-        "site_name",
-        "latitude",
-        "longitude",
-        "geometry",
-        "qualifying_area",
-        "qualifying_criteria",
-        "adjacent_id_fips",
-    ]
-    msha_df = msha_df[cols]
-    eia_df = eia_df[cols]
-
     adj_msha = _explode_adjacent_id_fips(
         msha_df, census_geometry=census_geometry, closure_type="coalmine"
     )
     adj_eia = _explode_adjacent_id_fips(
         eia_df, census_geometry=census_geometry, closure_type="coal_plant"
     )
-
+    # add on records for all areas adjacent to a qualifying area
     df = pd.concat([msha_df, eia_df, adj_msha, adj_eia])
+    df["geoid"] = df[f"{census_geometry}_id_fips"]
+    if census_geometry == "tract":
+        df["county_id_fips"] = df["tract_id_fips"].str[:5]
+    df = energy_comms.helpers.add_state_info(df, "county_id_fips")
+    cols = [
+        f"{census_geometry}_name",
+        "county_id_fips",
+        "state_id_fips",
+        "state_abbr",
+        "state_name",
+        "geoid",
+        "site_name",
+        "qualifying_criteria",
+        "qualifying_area",
+        "latitude",
+        "longitude",
+        "geometry",
+    ]
+    if census_geometry == "tract":
+        cols = ["tract_id_fips"] + cols
+    msha_df = msha_df[cols]
+    eia_df = eia_df[cols]
     return df

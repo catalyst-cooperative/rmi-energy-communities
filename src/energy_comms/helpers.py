@@ -3,7 +3,6 @@ import logging
 from typing import Any, Literal
 
 import geopandas
-import numpy as np
 import pandas as pd
 
 import pudl
@@ -157,46 +156,30 @@ def remove_invalid_lat_lon_records(
     return df
 
 
-def add_bls_qcew_geo_cols(qcew_df: pd.DataFrame) -> pd.DataFrame:
-    """Using BLS area codes, make a column indicating the geographic level of the record.
+def add_state_info(df: pd.DataFrame, fips_col: str) -> pd.DataFrame:
+    """Add state FIPS, name, and abbreviation onto a dataframe.
 
-    Geographic levels are counties, states, MSA, etc. In this case, since QCEW data
-    is filtered for county and MSA, only those geographic levels are found.
+    Adds columns state_id_fips, state_name, state_abbr.
 
     Args:
-        qcew_df: Dataframe to add geographic levels to. Probably the QCEW transformed data.
+        df: The dataframe to add the state info onto. Must have a column with
+            a FIPS code (five digit county, tract, etc.) for each record.
+        fips_col: The name of the column with the FIPS code for each record.
+            Must be a string column.
     """
-    df = qcew_df.copy()
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("Statewide"), "state", pd.NA
+    state_df = pd.read_table(
+        "https://www2.census.gov/geo/docs/reference/state.txt", delimiter="|"
     )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("Parish|City|Borough|County"),
-        "county",
-        df["geographic_level"],
+    state_df.columns = state_df.columns.str.strip().str.lower()
+    state_df = state_df.rename(
+        columns={"state": "state_id_fips", "stusab": "state_abbr"}
     )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("MSA"),
-        "metropolitan_stat_area",
-        df["geographic_level"],
+    state_df = state_df.astype(str)
+    state_df["state_id_fips"] = state_df["state_id_fips"].str.zfill(2)
+    df["state_id_fips"] = df[fips_col].str[:2]
+    df = df.merge(
+        state_df[["state_id_fips", "state_abbr", "state_name"]],
+        how="left",
+        on="state_id_fips",
     )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("MicroSA"),
-        "micropolitan_stat_area",
-        df["geographic_level"],
-    )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("(Combined)"),
-        "aggregated_stat_area",
-        df["geographic_level"],
-    )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("TOTAL"), "nationwide", df["geographic_level"]
-    )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("Unknown"),
-        "undefined",
-        df["geographic_level"],
-    )
-
     return df

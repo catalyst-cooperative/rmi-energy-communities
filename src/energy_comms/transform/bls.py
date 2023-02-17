@@ -4,8 +4,6 @@ import logging
 import numpy as np
 import pandas as pd
 
-import energy_comms
-
 logger = logging.getLogger(__name__)
 
 
@@ -201,13 +199,8 @@ def transform_qcew_data(df: pd.DataFrame) -> pd.DataFrame:
         }
     )
     df["area_fips"] = df["area_fips"].str.zfill(5)
-    # add geographic level and geoid column
-    df = energy_comms.helpers.add_bls_qcew_geo_cols(df)
-    df = df[
-        df.geographic_level.isin(
-            ["metropolitan_stat_area", "nonmetropolitan_stat_area"]
-        )
-    ]
+    # only including MSA for now, not non-MSA
+    df = df[df["area_title"].str.contains("MSA")]
     df = df.rename(columns={"area_fips": "msa_code"})
     cols = [
         "msa_code",
@@ -216,6 +209,5 @@ def transform_qcew_data(df: pd.DataFrame) -> pd.DataFrame:
         "industry_code",
         "own_code",
         "annual_avg_emplvl",
-        "geographic_level",
     ]
     return df[cols]

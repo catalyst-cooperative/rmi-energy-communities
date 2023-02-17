@@ -6,9 +6,36 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 
+import energy_comms
+
 logger = logging.getLogger(__name__)
 
 FOSSIL_NAICS_CODES = ["2121", "211", "213", "23712", "486", "4247", "22112"]
+
+# in New England states the MSA codes don't map perfectly from LAU to QCEW
+LAU_TO_QCEW_MSA_CODE_CORRECTIONS = {
+    "C7195": "C1486",
+    "C7345": "C2554",
+    "C7645": "C3598",
+    "C7075": "C1262",
+    "C7465": "C3034",
+    "C7675": "C3886",
+    "C7090": "C1270",
+    "C7165": "C1446",
+    "C7660": "C3834",
+    "C7810": "C4414",
+    "C7960": "C4934",
+    "C7495": "C3170",
+    "C7720": "C3930",
+    "C7240": "C1554",
+    "C7570": "C3530",
+    "C7285": "C1486",
+    "C7870": "C3530",
+    "C7555": "C3930",
+    "C7450": "C4934",
+    "C7305": "C1446",
+    "C7690": "C1446",
+}
 
 
 def fossil_employment_qualifying_areas(
@@ -111,11 +138,22 @@ def unemployment_rate_qualifying_areas(
         1,
         0,
     )
-    # fix MSA codes that are different in the MSA to county crosswalk
-    # TODO: make a default dict with the bad code: good code, map between
-    # create a record for each county in the MSA
+
+    # fix MSA codes that are different in the QCEW MSA to county crosswalk
+    full_df = full_df.replace({"msa_code": LAU_TO_QCEW_MSA_CODE_CORRECTIONS})
     full_df = full_df.merge(msa_df, on="msa_code", how="left")
     full_df["geoid"] = full_df["county_id_fips"]
+    if len(full_df[full_df.geoid.isnull()]) != 0:
+        bad_codes = (
+            full_df[full_df.geoid.isnull()]
+            .drop_duplicates(subset=["msa_code"])["msa_code"]
+            .unique()
+        )
+        logger.warning(
+            f"In the LAU data the MSA codes {bad_codes} don't have records "
+            "in the MSA to county crosswalk. These MSAs likely have "
+            "different codes in the crosswalk."
+        )
 
     return full_df
 
@@ -142,32 +180,24 @@ def employment_criteria_qualifying_areas(
     unemployment_df = unemployment_df[
         unemployment_df["meets_unemployment_threshold"] == 1
     ]
-    # drop column for no overlap with fossil df
-    unemployment_df = unemployment_df.drop(
-        columns=[
-            "state_id_fips",
-        ]
-    )
     df = fossil_employment_df.merge(
-        unemployment_df,
+        unemployment_df[["geoid", "year", "meets_unemployment_threshold"]],
         on=["geoid", "year"],
         how="left",
     )
-    df = df.fillna({"meets_unemployment_threshold": 0})
-    df = df[
-        (df["meets_fossil_employment_threshold"] == 1)
-        & (df["meets_unemployment_threshold"] == 1)
-    ]
+    df = df[~(df.meets_unemployment_threshold.isnull())]
     df = df.drop_duplicates(subset=["geoid"])
+    df = energy_comms.helpers.add_state_info(df, "county_id_fips")
     df["qualifying_criteria"] = "fossil_fuel_employment"
     df["qualifying_area"] = "MSA"
-    df = df.rename(columns={"area_title": "census_name"})
+    df = df.rename(columns={"county_title": "county_name"})
     df = df[
         [
-            "census_name",
+            "county_name",
             "county_id_fips",
             "state_id_fips",
-            "state",
+            "state_abbr",
+            "state_name",
             "geoid",
             "qualifying_criteria",
             "qualifying_area",

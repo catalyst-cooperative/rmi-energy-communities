@@ -20,7 +20,7 @@ setup(
     use_scm_version=True,
     author="Catalyst Cooperative",
     author_email="pudl@catalyst.coop",
-    maintainer="Chesire Cat",
+    maintainer="Cheshire Cat",
     maintainer_email="pudl@catalyst.coop",
     url="",  # Can be repo or docs URL if no separate web page exists.
     project_urls={
@@ -35,7 +35,6 @@ setup(
     # In order for the dependabot to update versions, they must be listed here.
     # Use the format pkg_name>=x,<y", Included packages are just examples:
     install_requires=[
-        "beautifulsoup4>=4.11,<4.12",
         "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
         "geopandas>=0.11,<0.13",
         "pandas>=1.4,<1.5.4",

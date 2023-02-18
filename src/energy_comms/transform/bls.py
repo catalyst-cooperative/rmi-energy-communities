@@ -1,7 +1,6 @@
 """Transform functions for Bureau of Labor Statistics data for employment criteria."""
 import logging
 
-import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -137,44 +136,6 @@ def transform_local_area_unemployment_rates(
     df = lau_df.merge(area_df, on="series_id", how="left")
     # drop any records that we don't have MSA data for
     df = df[~df.msa_code.isnull()]
-    return df
-
-
-def transform_msa_codes(df: pd.DataFrame) -> pd.DataFrame:
-    """Transform dataframe of MSA codes and names.
-
-    Clean column names, enforce string types, pad FIPS codes with 0s,
-    construct geoid. Geoid is five digit fips for nonmetropolitan stat
-    areas and the five digit MSA code for metropolitan stat areas.
-    """
-    df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
-    col_rename_dict = {
-        "fips_code": "state_id_fips",
-        "county_code": "county_id_fips",
-        "township_code": "township_id_fips",
-    }
-    # msa names and codes column have names like may_2021_msa_code
-    # make this name independent of date of data publishing
-    col_rename_dict.update(
-        {
-            df.columns[df.columns.str.contains("msa_name")][0]: "msa_name",
-            df.columns[df.columns.str.contains("msa_code")][0]: "msa_code",
-        }
-    )
-    # all columns are string type
-    df = df.rename(columns=col_rename_dict).astype("string")
-    # construct FIPS codes
-    df["state_id_fips"] = df["state_id_fips"].str.zfill(2)
-    df["county_id_fips"] = df["county_id_fips"].str.zfill(3)
-    df["township_id_fips"] = df["township_id_fips"].str.zfill(3)
-    # construct geoid which will be used to merge with
-    # records from unemployment criteria dataframe
-    df["geoid"] = np.where(
-        df["msa_name"].str.contains("nonmetropolitan"),
-        df["state_id_fips"] + df["county_id_fips"],
-        df["msa_code"],
-    )
-    df["geoid"] = df["geoid"].astype("string")
     return df
 
 

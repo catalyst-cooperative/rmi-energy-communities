@@ -192,7 +192,9 @@ def employment_criteria_qualifying_areas(
     )
     df = df[~(df.meets_unemployment_threshold.isnull())]
     df = df.drop_duplicates(subset=["geoid"])
-    df = energy_comms.helpers.add_state_info(df, "county_id_fips").pipe(
+    df = energy_comms.helpers.add_area_info(
+        df, fips_col="county_id_fips", add_state=True, add_county=False
+    ).pipe(
         energy_comms.helpers.add_geometry_column,
         census_geometry="county",
         pudl_settings=pudl_settings,
@@ -210,13 +212,12 @@ def employment_criteria_qualifying_areas(
             "geoid",
             "qualifying_criteria",
             "qualifying_area",
-            "geometry",
+            "area_geometry",
         ]
     ]
     return df
 
 
-# TODO: merge on names of the geometry
 def _explode_adjacent_id_fips(
     df: pd.DataFrame,
     census_geometry: Literal["county", "tract"] = "tract",
@@ -224,6 +225,11 @@ def _explode_adjacent_id_fips(
 ) -> pd.DataFrame:
     adj_records = pd.DataFrame()
     adj_records[f"{census_geometry}_id_fips"] = df.adjacent_id_fips.explode()
+    adj_records = energy_comms.helpers.add_geometry_column(
+        adj_records,
+        census_geometry=census_geometry,
+        add_name=True,
+    )
     adj_records["qualifying_area"] = f"{census_geometry}"
     adj_records["qualifying_criteria"] = f"{closure_type}_adjacent_{census_geometry}"
     adj_records = adj_records.drop_duplicates()
@@ -255,20 +261,25 @@ def coal_criteria_qualifying_areas(
             "plant_name_eia": "site_name",
         }
     )
+    # create records for all areas adjacent to a qualifying area
     adj_msha = _explode_adjacent_id_fips(
-        msha_df, census_geometry=census_geometry, closure_type="coalmine"
+        msha_df, census_geometry=census_geometry, closure_type="coal_mine"
     )
     adj_eia = _explode_adjacent_id_fips(
         eia_df, census_geometry=census_geometry, closure_type="coal_plant"
     )
-    # add on records for all areas adjacent to a qualifying area
-    df = pd.concat([msha_df, eia_df, adj_msha, adj_eia])
+    df = pd.concat([msha_df, eia_df, adj_msha, adj_eia]).to_crs("EPSG:4269")
     df["geoid"] = df[f"{census_geometry}_id_fips"]
     if census_geometry == "tract":
-        df["county_id_fips"] = df["tract_id_fips"].str[:5]
-    df = energy_comms.helpers.add_state_info(df, "county_id_fips")
+        df = energy_comms.helpers.add_area_info(
+            df, fips_col="tract_id_fips", add_state=True, add_county=True
+        )
+    else:
+        df = energy_comms.helpers.add_area_info(
+            df, fips_col="county_id_fips", add_state=True, add_county=False
+        )
     cols = [
-        f"{census_geometry}_name",
+        "county_name",
         "county_id_fips",
         "state_id_fips",
         "state_abbr",
@@ -279,10 +290,11 @@ def coal_criteria_qualifying_areas(
         "qualifying_area",
         "latitude",
         "longitude",
-        "geometry",
+        "site_geometry",
+        "area_geometry",
     ]
     if census_geometry == "tract":
-        cols = ["tract_id_fips"] + cols
-    msha_df = msha_df[cols]
-    eia_df = eia_df[cols]
+        cols = ["tract_name", "tract_id_fips"] + cols
+    df = df[cols]
+
     return df

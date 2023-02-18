@@ -50,7 +50,8 @@ def add_geometry_column(
             layer=census_geometry, pudl_settings=pudl_settings
         )
     census_gdf = census_gdf.rename(columns=col_names[census_geometry])
-    geo_cols = ["geometry", f"{census_geometry}_id_fips"]
+    census_gdf = census_gdf.rename_geometry("area_geometry")
+    geo_cols = ["area_geometry", f"{census_geometry}_id_fips"]
     if add_name:
         geo_cols += [f"{census_geometry}_name"]
     gdf = df.merge(
@@ -115,8 +116,13 @@ def get_geometry_intersection(
             f"Converting geodataframe CRS {gdf.crs} to match Census geodataframe CRS {census_gdf.crs}"
         )
         gdf = gdf.to_crs(census_gdf.crs)
+    gdf = gdf.rename_geometry("site_geometry")
+    # create column to retain geometry of census area after joining
+    census_gdf["area_geometry"] = census_gdf["geometry"]
     output = gdf.sjoin(
-        census_gdf[["geometry"] + list(col_names[census_geometry].keys())],
+        census_gdf[
+            ["geometry", "area_geometry"] + list(col_names[census_geometry].keys())
+        ],
         how="left",
         predicate="intersects",
     ).rename(columns=col_names[census_geometry])
@@ -206,8 +212,10 @@ def remove_invalid_lat_lon_records(
     return df
 
 
-def add_state_info(df: pd.DataFrame, fips_col: str) -> pd.DataFrame:
-    """Add state FIPS, name, and abbreviation onto a dataframe.
+def add_area_info(
+    df: pd.DataFrame, fips_col: str, add_state: bool = True, add_county: bool = True
+) -> pd.DataFrame:
+    """Add columns for state and/or county FIPS code, name, and abbreviation.
 
     Adds columns state_id_fips, state_name, state_abbr.
 
@@ -216,20 +224,35 @@ def add_state_info(df: pd.DataFrame, fips_col: str) -> pd.DataFrame:
             a FIPS code (five digit county, tract, etc.) for each record.
         fips_col: The name of the column with the FIPS code for each record.
             Must be a string column.
+        add_state: Whether to add state FIPS, name, and abbreviation.
+            Default is True.
+        add_county: Whether to add county FIPS and name. Default is True.
     """
-    state_df = pd.read_table(
-        "https://www2.census.gov/geo/docs/reference/state.txt", delimiter="|"
-    )
-    state_df.columns = state_df.columns.str.strip().str.lower()
-    state_df = state_df.rename(
-        columns={"state": "state_id_fips", "stusab": "state_abbr"}
-    )
-    state_df = state_df.astype(str)
-    state_df["state_id_fips"] = state_df["state_id_fips"].str.zfill(2)
-    df["state_id_fips"] = df[fips_col].str[:2]
-    df = df.merge(
-        state_df[["state_id_fips", "state_abbr", "state_name"]],
-        how="left",
-        on="state_id_fips",
-    )
+    col_names = {
+        "state": {
+            "geoid10": "state_id_fips",
+            "name10": "state_name",
+            "stusps10": "state_abbr",
+        },
+        "county": {"geoid10": "county_id_fips", "namelsad10": "county_name"},
+    }
+    if add_state:
+        df["state_id_fips"] = df[fips_col].str[:2]
+        state_df = pudl.output.censusdp1tract.get_layer(layer="state").rename(
+            columns=col_names["state"]
+        )
+        df = df.merge(
+            state_df[list(col_names["state"].values())], how="left", on="state_id_fips"
+        )
+    if add_county:
+        df["county_id_fips"] = df[fips_col].str[:5]
+        county_df = pudl.output.censusdp1tract.get_layer(layer="county").rename(
+            columns=col_names["county"]
+        )
+        df = df.merge(
+            county_df[list(col_names["county"].values())],
+            how="left",
+            on="county_id_fips",
+        )
+
     return df

@@ -45,11 +45,16 @@ def get_brownfields_criteria_qualifying_areas(
         epa_raw_df, census_geometry=census_geometry
     )
     if census_geometry == "tract":
-        epa_df["county_id_fips"] = epa_df["tract_id_fips"].str[:5]
-    epa_df = energy_comms.helpers.add_state_info(epa_df, "county_id_fips")
+        epa_df = energy_comms.helpers.add_area_info(
+            epa_df, fips_col="tract_id_fips", add_state=True, add_county=True
+        )
+    else:
+        epa_df = energy_comms.helpers.add_area_info(
+            epa_df, fips_col="county_id_fips", add_state=True, add_county=False
+        )
     epa_df["geoid"] = epa_df[f"{census_geometry}_id_fips"]
     cols = [
-        f"{census_geometry}_name",
+        "county_name",
         "county_id_fips",
         "state_id_fips",
         "state_abbr",
@@ -60,10 +65,11 @@ def get_brownfields_criteria_qualifying_areas(
         "site_name",
         "latitude",
         "longitude",
-        "geometry",
+        "site_geometry",
+        "area_geometry",
     ]
     if census_geometry == "tract":
-        cols = ["tract_id_fips"] + cols
+        cols = ["tract_name", "tract_id_fips"] + cols
     epa_df = epa_df[cols]
     return epa_df
 
@@ -128,5 +134,7 @@ def get_all_qualifying_areas(
         census_geometry=brownfields_census_geometry
     )
     employment_df = get_employment_criteria_qualifying_areas(update=update_employment)
-    full_df = pd.concat([coal_df, brownfields_df, employment_df], ignore_index=True)
+    full_df = pd.concat(
+        [coal_df, brownfields_df, employment_df], ignore_index=True
+    ).set_crs("EPSG:4269")
     return full_df

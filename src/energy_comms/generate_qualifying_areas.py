@@ -91,11 +91,11 @@ def fossil_employment_qualifying_areas(
     full_df = full_df[full_df.total_employees != 0]
     # Get percentage of fossil fuel employment
     full_df["percent_fossil_employment"] = (
-        full_df.fossil_employees / full_df.total_employees * 100
+        full_df.fossil_employees / full_df.total_employees
     )
     # area qualifies if fossil fuel employment is greater than .17%
     full_df["meets_fossil_employment_threshold"] = np.where(
-        full_df["percent_fossil_employment"] > 0.17, 1, 0
+        full_df["percent_fossil_employment"] > 0.0017, 1, 0
     )
     # merge in state, county, and MSA name information
     # and create a record for each county in an MSA
@@ -201,7 +201,7 @@ def employment_criteria_qualifying_areas(
     )
     df["qualifying_criteria"] = "fossil_fuel_employment"
     df["qualifying_area"] = "MSA"
-    df = df.rename(columns={"county_title": "county_name"})
+    df = df.rename(columns={"county_title": "county_name", "msa_title": "site_name"})
     df = df[
         [
             "county_name",
@@ -210,6 +210,7 @@ def employment_criteria_qualifying_areas(
             "state_abbr",
             "state_name",
             "geoid",
+            "site_name",
             "qualifying_criteria",
             "qualifying_area",
             "area_geometry",

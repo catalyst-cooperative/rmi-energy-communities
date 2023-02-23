@@ -33,7 +33,7 @@ jobs:
           printenv | sort
 
       - name: Cache PUDL DB
-        uses: actions/cache@v3.2.5
+        uses: actions/cache@v3.2.6
         with:
           path: ~/pudl-work/sqlite/pudl.sqlite
           # The last time we deployed Datasette. Update if we redeploy.

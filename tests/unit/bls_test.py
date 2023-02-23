@@ -2,6 +2,7 @@
 
 import logging
 import pathlib
+from typing import Any
 
 import pandas as pd
 
@@ -10,7 +11,9 @@ import energy_comms
 logger = logging.getLogger(__name__)
 
 
-def test_employment_qualifier(test_dir: pathlib.Path) -> None:
+def test_employment_qualifier(
+    test_dir: pathlib.Path, pudl_settings_fixture: dict[Any, Any] | None
+) -> None:
     """Test if employment criteria functions selects correct MSAs.
 
     First test the fossil fuel employment criteria. Then test
@@ -131,7 +134,9 @@ def test_employment_qualifier(test_dir: pathlib.Path) -> None:
     )
     employment_output = (
         energy_comms.generate_qualifying_areas.employment_criteria_qualifying_areas(
-            fossil_employment_df=fossil_output, unemployment_df=unemployment_output
+            fossil_employment_df=fossil_output,
+            unemployment_df=unemployment_output,
+            pudl_settings=pudl_settings_fixture,
         )
     )[list(employment_expected.columns)]
     logger.info(employment_output.columns)

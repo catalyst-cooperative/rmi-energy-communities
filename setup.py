@@ -42,7 +42,7 @@ setup(
         "plotly>=5.11,<5.14",
         "pygeos>=0.11,<0.15",
         "Shapely>1.8.0,<2.1",
-        "sqlalchemy>=1.4,<2.0.4",
+        "sqlalchemy>=1.4,<2.0.5",
     ],
     extras_require={
         "dev": [
@@ -60,7 +60,7 @@ setup(
         ],
         "tests": [
             "bandit>=1.6,<1.8",  # Checks code for security issues
-            "coverage>=5.3,<7.2",  # Lets us track what code is being tested
+            "coverage>=5.3,<7.3",  # Lets us track what code is being tested
             "doc8>=0.9,<1.2",  # Ensures clean documentation formatting
             "flake8>=4.0,<6.1",  # A framework for linting & static analysis
             "flake8-builtins>=1.5,<2.2",  # Avoid shadowing Python built-in names
@@ -71,7 +71,7 @@ setup(
             "mccabe>=0.6,<0.8",  # Checks that code isn't overly complicated
             "mypy>=0.942,<1.1",  # Static type checking
             "pep8-naming>=0.12,<0.14",  # Require PEP8 compliant variable names
-            "pre-commit>=2.9,<3.1",  # Allow us to run pre-commit hooks in testing
+            "pre-commit>=2.9,<3.2",  # Allow us to run pre-commit hooks in testing
             "pydocstyle>=5.1,<6.4",  # Style guidelines for Python documentation
             "pytest>=6.2,<7.3",  # Our testing framework
             "pytest-console-scripts>=1.1,<1.4",  # Allow automatic testing of scripts

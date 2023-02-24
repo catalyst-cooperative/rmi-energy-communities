@@ -73,13 +73,19 @@ qualifying criteria mean, see the below section on IRA criteria.
 
 **Command Line Arguments**:
 
-- ``--coal_area``: 
-- ``--brownfields_area``:
-- ``--update_employment_data``:
-- ``--output_filepath``:
+``--coal_area``: The type of qualifying area for the coal criteria.
+Options are ``tract`` and ``county``. The legislative text specifies
+tract and the default value for this argument is tract.
 
-Note that for the coal closure and brownfields criteria you can specify the
-census geometry area that qualifies for the criteria e.g. tract, county, state.
+``--brownfields_area``: The type of qualifying area for the brownfields
+criteria. Options are ``tract`` and ``county``. The legislative text doesn't
+specify what areas should qualify by this criteria. The default value is tract.
+
+``--update_employment_data``: Whether to use a fresh download of QCEW and LAU
+data for the employment criteria.
+
+``--output_filepath``: Absolute or relative file path to save the pickled output
+dataframe.
 
 To save a pickled dataframe of all areas that qualify as an energy community and the
 criteria they qualify by, you can run:
@@ -88,14 +94,14 @@ criteria they qualify by, you can run:
 
    get_all_qualifying_areas --coal_area tract --brownfields_area tract  --output_filepath all_qualifying_areas.pkl
 
-To get just the states, counties, or census tracts that qualify under the coal
+To get just the counties or census tracts that qualify under the coal
 closures community criteria run:
 
 .. code:: bash
 
    get_coal_qualifying_areas --coal_area tract --output_filepath coal_qualifying_areas.pkl
 
-To get the states, counties, or census tract that qualify under the
+To get the counties or census tracts that qualify under the
 brownfields criteria run:
 
 .. code:: bash
@@ -141,7 +147,7 @@ To run the pre-commit hooks before you commit code run:
 Thank You
 =========
 
-A big thank you to Resources for the Future for generously sharing with
+Thank you to Resources for the Future for generously sharing with
 us their own work and insight on identifing energy communities. You can view their
 report on IRA energy communities
 `here <https://www.resources.org/common-resources/what-is-an-energy-community/>`__.

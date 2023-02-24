@@ -71,7 +71,7 @@ county in that MSA. If a Census tract qualifies under the coal criteria, the
 the county that the tract is contained in. For more information about what these
 qualifying criteria mean, see the below section on IRA criteria.
 
-**Command Line Arguments**:
+**Command Line Arguments:**
 
 ``--coal_area``: The type of qualifying area for the coal criteria.
 Options are ``tract`` and ``county``. The legislative text specifies
@@ -86,6 +86,8 @@ data for the employment criteria.
 
 ``--output_filepath``: Absolute or relative file path to save the pickled output
 dataframe.
+
+**Commands:**
 
 To save a pickled dataframe of all areas that qualify as an energy community and the
 criteria they qualify by, you can run:
@@ -114,6 +116,45 @@ areas that qualify under the employment criteria run:
 .. code:: bash
 
    get_employment_qualifying_areas --update_employment_data True
+   
+**Without Command Line:**
+
+To generate these output dataframes not from the command line, you can call
+the functions in the ``energy_comms.coordinate`` module.
+   
+ 
+**Output Dataframe Columns:**
+
+``county_id_fips``, ``county_name``, ``state_id_fips``, ``state_name``,
+``state_abbr``: County/state FIPS, name, abbreviation for every record.
+
+``tract_id_fips``, ``tract_name``: Tract FIPS/name for records whose criteria is
+on the tract level (brownfields or coal criteria only).
+
+``geoid``: ``county_id_fips`` or ``tract_id_fips`` depending on the area level of
+the brownfields and coal criteria, ``county_id_fips`` for the employment criteria
+since this criteria specifies qualifying MSAs.
+
+``site_name``: The mine name, plant name, brownfield site name, or MSA name for
+the employment criteria.
+
+``qualifying_criteria``: The criteria that qualifies the record, values are
+``coalmine``, ``coal_plant``, ``coal_mine_adjacent_tract``,
+``coal_plant_adjacent_tract``, ``brownfield``, or ``fossil_fuel_employment``.
+
+``qualifying_area``: The area type that qualifies a record under its
+``qualifying_criteria``, values are ``tract`` for the coal criteria, ``point``
+for the brownfields criteria, ``MSA`` for the employment criteria.
+
+``latitude``, ``longitude``: Latitude and longitude of the coal mine, coal plant,
+or brownfield. Will be null for employment criteria records and records that
+qualify due to adjacency to a coal plant or mine.
+
+``site_geometry``, ``area_geometry``: The shape geometry of the site - a point for
+brownfields and coal criteria records, null for other records. The shape geometry
+for the area type of the qualifying criteria for that record (tract or county for
+brownfields and coal criteria, county for employment criteria). The
+``area_geometry`` shape matches the FIPS code in ``geoid``.
 
 
 Inflation Reduction Act Energy Communities Criteria

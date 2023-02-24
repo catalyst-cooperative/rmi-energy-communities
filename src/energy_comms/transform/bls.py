@@ -140,7 +140,7 @@ def transform_local_area_unemployment_rates(
     return df
 
 
-def transform_msa_codes(df: pd.DataFrame) -> pd.DataFrame:
+def transform_msa_area_defs(df: pd.DataFrame) -> pd.DataFrame:
     """Transform dataframe of MSA codes and names.
 
     Clean column names, enforce string types, pad FIPS codes with 0s,

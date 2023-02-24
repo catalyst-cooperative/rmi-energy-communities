@@ -213,11 +213,17 @@ def remove_invalid_lat_lon_records(
 
 
 def add_area_info(
-    df: pd.DataFrame, fips_col: str, add_state: bool = True, add_county: bool = True
+    df: pd.DataFrame,
+    fips_col: str,
+    add_state: bool = True,
+    add_county: bool = True,
+    state_df: pd.DataFrame = None,
+    county_df: pd.DataFrame = None,
 ) -> pd.DataFrame:
     """Add columns for state and/or county FIPS code, name, and abbreviation.
 
-    Adds columns state_id_fips, state_name, state_abbr.
+    Adds columns ``state_id_fips``, ``state_name``, ``state_abbr``, ``county_id_fips``,
+    ``county_name``.
 
     Args:
         df: The dataframe to add the state info onto. Must have a column with
@@ -227,6 +233,14 @@ def add_area_info(
         add_state: Whether to add state FIPS, name, and abbreviation.
             Default is True.
         add_county: Whether to add county FIPS and name. Default is True.
+        state_df: Dataframe of state data. If None (the default), this dataframe
+            is generated from ``pudl.output.censusdp1tract.get_layer(layer="state")``.
+            This parameter is mostly used for testing purposes. Must have columns
+            ``state_id_fips``, ``state_name``, ``state_abbr``
+        county_df: Dataframe of county info. If None (the default), this dataframe
+            is generated from ``pudl.output.censusdp1tract.get_layer(layer="county")``.
+            This parameter is mostly used for testing purposes. Must have columns
+            ``county_id_fips``, ``county_name``
     """
     col_names = {
         "state": {
@@ -238,17 +252,19 @@ def add_area_info(
     }
     if add_state:
         df["state_id_fips"] = df[fips_col].str[:2]
-        state_df = pudl.output.censusdp1tract.get_layer(layer="state").rename(
-            columns=col_names["state"]
-        )
+        if state_df is None:
+            state_df = pudl.output.censusdp1tract.get_layer(layer="state").rename(
+                columns=col_names["state"]
+            )
         df = df.merge(
             state_df[list(col_names["state"].values())], how="left", on="state_id_fips"
         )
     if add_county:
         df["county_id_fips"] = df[fips_col].str[:5]
-        county_df = pudl.output.censusdp1tract.get_layer(layer="county").rename(
-            columns=col_names["county"]
-        )
+        if county_df is None:
+            county_df = pudl.output.censusdp1tract.get_layer(layer="county").rename(
+                columns=col_names["county"]
+            )
         df = df.merge(
             county_df[list(col_names["county"].values())],
             how="left",

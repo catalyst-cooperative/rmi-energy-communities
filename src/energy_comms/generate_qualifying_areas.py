@@ -162,6 +162,8 @@ def employment_criteria_qualifying_areas(
     fossil_employment_df: pd.DataFrame,
     unemployment_df: pd.DataFrame,
     pudl_settings: dict[Any, Any] | None = None,
+    census_state_df: pd.DataFrame = None,
+    census_county_df: pd.DataFrame = None,
 ) -> pd.DataFrame:
     """Combine employment criteria dataframes to find all qualifying areas.
 
@@ -178,6 +180,14 @@ def employment_criteria_qualifying_areas(
         pudl_settings: Default is None. Used for adding geometry column onto dataframe.
             A dictionary of PUDL settings, including paths to various resources like the
             Census DP1 SQLite database. If None, the user defaults are used.
+        census_state_df: Dataframe of state data. If None (the default), this dataframe
+            is generated from ``pudl.output.censusdp1tract.get_layer(layer="state")``.
+            This parameter is mostly used for testing purposes. Must have columns
+            ``state_id_fips``, ``state_name``, ``state_abbr``
+        census_county_df: Dataframe of county info. If None (the default), this dataframe
+            is generated from ``pudl.output.censusdp1tract.get_layer(layer="county")``.
+            This parameter is mostly used for testing purposes. Must have columns
+            ``county_id_fips``, ``county_name``
     """
     fossil_employment_df = fossil_employment_df[
         fossil_employment_df["meets_fossil_employment_threshold"] == 1
@@ -193,11 +203,17 @@ def employment_criteria_qualifying_areas(
     df = df[~(df.meets_unemployment_threshold.isnull())]
     df = df.drop_duplicates(subset=["geoid"])
     df = energy_comms.helpers.add_area_info(
-        df, fips_col="county_id_fips", add_state=True, add_county=False
+        df,
+        fips_col="county_id_fips",
+        add_state=True,
+        add_county=False,
+        state_df=census_state_df,
+        county_df=census_county_df,
     ).pipe(
         energy_comms.helpers.add_geometry_column,
         census_geometry="county",
         pudl_settings=pudl_settings,
+        census_gdf=census_county_df,
     )
     df["qualifying_criteria"] = "fossil_fuel_employment"
     df["qualifying_area"] = "MSA"

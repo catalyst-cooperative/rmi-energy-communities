@@ -2,7 +2,6 @@
 
 import logging
 import pathlib
-from typing import Any
 
 import pandas as pd
 
@@ -11,9 +10,7 @@ import energy_comms
 logger = logging.getLogger(__name__)
 
 
-def test_employment_qualifier(
-    test_dir: pathlib.Path, pudl_settings_fixture: dict[Any, Any] | None
-) -> None:
+def test_employment_qualifier(test_dir: pathlib.Path) -> None:
     """Test if employment criteria functions selects correct MSAs.
 
     First test the fossil fuel employment criteria. Then test
@@ -132,12 +129,18 @@ def test_employment_qualifier(
             "qualifying_area": "MSA",
         }
     )
+    state_df = pd.read_csv(
+        test_dir / "test_inputs/texas_census_state_df.csv", dtype=str
+    )
+    county_df = pd.read_pickle(
+        test_dir / "test_inputs/texas_census_counties_gdf.pkl.gz"
+    )
     employment_output = (
         energy_comms.generate_qualifying_areas.employment_criteria_qualifying_areas(
             fossil_employment_df=fossil_output,
             unemployment_df=unemployment_output,
-            pudl_settings=pudl_settings_fixture,
+            census_county_df=county_df,
+            census_state_df=state_df,
         )
     )[list(employment_expected.columns)]
-    logger.info(employment_output.columns)
     pd.testing.assert_frame_equal(employment_expected, employment_output)

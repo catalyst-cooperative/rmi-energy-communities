@@ -255,14 +255,18 @@ def extract_qcew_data(
             / f"qcew/yearly_concatenated_csvs/{year}_counties_msas.csv"
         )
         if not file_path.exists():
-            logger.info(f"No {year} QCEW data.")
+            logger.info(f"No {year} QCEW data. Attempting download.")
+            download_qcew_data(years=[year])
+        # after trying a download, check if the file now exists
+        if file_path.exists():
+            df = pd.concat(
+                [
+                    df,
+                    pd.read_csv(file_path),
+                ]
+            )
+        else:
             continue
-        df = pd.concat(
-            [
-                df,
-                pd.read_csv(file_path),
-            ]
-        )
     return df
 
 

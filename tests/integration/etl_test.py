@@ -144,7 +144,7 @@ def test_bls_etl() -> None:
 
     # now do fossil fuel employment criteria with 2020 data
     year = 2020
-    qcew_df = energy_comms.extract.bls.extract_qcew_data(years=[year])
+    qcew_df = energy_comms.extract.bls.extract_qcew_data(years=[year], update=True)
     if qcew_df.empty:
         raise AssertionError(f"{year} QCEW data extract returned empty dataframe.")
     qcew_df = energy_comms.transform.bls.transform_qcew_data(qcew_df)

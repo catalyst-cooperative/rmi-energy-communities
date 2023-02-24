@@ -31,6 +31,8 @@ LAU_FOOTNOTE_FILENAME = "la.footnote"
 
 MSA_URL = "https://www.bls.gov/oes/current/msa_def.htm"
 
+MSA_COUNTY_CROSSWALK_URL = "https://www.bls.gov/cew/classifications/areas/qcew-county-msa-csa-crosswalk-csv.csv"
+
 EXPECTED_MSA_FILENAME = "/oes/2021/may/area_definitions_m2021.xlsx"
 
 QCEW_URL = "https://data.bls.gov/cew/data/files/"
@@ -132,7 +134,7 @@ def extract_lau_footnote_table(update: bool = False) -> pd.DataFrame:
     return df
 
 
-def extract_msa_codes() -> pd.DataFrame:
+def extract_msa_area_defs() -> pd.DataFrame:
     """Extract code definitions of Metropolitan Statistical Areas.
 
     Gives codes and names for Metropolitan Statistical Areas and
@@ -157,6 +159,20 @@ def extract_msa_codes() -> pd.DataFrame:
     else:
         file_url = EXPECTED_MSA_FILENAME
     df = pd.read_excel("https://www.bls.gov" + file_url)
+    return df
+
+
+def extract_msa_county_crosswalk() -> pd.DataFrame:
+    """Extract crosswalk from Metropolitan Statistical Areas to counties.
+
+    MSAs are a group of counties, we can go from MSA to their contained
+    counties with this crosswalk. Download CSV from
+    https://www.bls.gov/cew/classifications/areas/county-msa-csa-crosswalk.htm
+    """
+    df = pd.read_csv(
+        MSA_COUNTY_CROSSWALK_URL,
+        encoding="latin",
+    )
     return df
 
 
@@ -239,14 +255,18 @@ def extract_qcew_data(
             / f"qcew/yearly_concatenated_csvs/{year}_counties_msas.csv"
         )
         if not file_path.exists():
-            logger.info(f"No {year} QCEW data.")
+            logger.info(f"No {year} QCEW data. Attempting download.")
+            download_qcew_data(years=[year])
+        # after trying a download, check if the file now exists
+        if file_path.exists():
+            df = pd.concat(
+                [
+                    df,
+                    pd.read_csv(file_path),
+                ]
+            )
+        else:
             continue
-        df = pd.concat(
-            [
-                df,
-                pd.read_csv(file_path),
-            ]
-        )
     return df
 
 

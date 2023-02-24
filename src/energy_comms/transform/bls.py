@@ -4,8 +4,6 @@ import logging
 import numpy as np
 import pandas as pd
 
-import energy_comms
-
 logger = logging.getLogger(__name__)
 
 
@@ -79,7 +77,8 @@ def transform_lau_areas(raw_df: pd.DataFrame) -> pd.DataFrame:
 
     Construct the BLS series ID for records that refer to a county
     or metropolitan statistical area. Add state FIPS ID column and
-    and geo ID column.
+    and geo ID column. For more information on these BLS series IDs
+    see https://www.bls.gov/help/hlpforma.htm#LA
 
     This table gives the area name for the LAU data.
     """
@@ -88,26 +87,14 @@ def transform_lau_areas(raw_df: pd.DataFrame) -> pd.DataFrame:
     df = df.astype(
         {"area_type_code": "string", "area_code": "string", "area_text": "string"}
     )
-    # only keep records for county and MSA
-    df = df[(df.area_code.str[:2] == "CN") | (df.area_code.str[:2] == "MT")]
-    df["geographic_level"] = np.where(
-        df.area_code.str[:2] == "CN", "county", "metropolitan_stat_area"
-    )
+    # only keep records for MSAs
+    df = df[df.area_code.str[:2] == "MT"]
     df["state_id_fips"] = df["area_code"].str[2:4]
-    # construct geoid which will be used to merge with
-    # records from fossil employment dataframe
-    df["geoid"] = np.where(
-        df["geographic_level"] == "county",
-        df["area_code"].str[2:7],
-        df["area_code"].str[4:9],
-    )
     # construct the local area unemployment series ID
-    df["series_id"] = np.where(
-        df["geographic_level"] == "county",
-        "LAU" + df["area_code"].str[:7],
-        "LAU" + df["area_code"].str[:10],
-    )
+    df["series_id"] = "LAU" + df["area_code"].str[:10]
     df["series_id"] = df["series_id"].str.pad(width=18, side="right", fillchar="0")
+    # construct the MSA code for the MSA to county crosswalk
+    df["msa_code"] = "C" + df["area_code"].str[4:8]
     # 03 is the unemployment rate code
     df["series_id"] = df["series_id"] + "03"
     return df
@@ -130,9 +117,13 @@ def transform_local_area_unemployment_rates(
         and metropolitan statistical areas.
     """
     lau_df = transform_lau_table(raw_lau_df)
+    # filter for just MSAs
+    lau_df = lau_df[lau_df.series_id.str[3:5] == "MT"]
+    # filter for unemployent rate statistics (last two digits is measure_code)
+    lau_df = lau_df[lau_df.series_id.str[-2:] == "03"]
     # take an annual average, didn't use M13 here because it is null
     # (footnote code U) when any monthly value is missing (footnote code N)
-    # but maybe it's best ot use M13 and not interpolate annual average
+    # but maybe it's best to use M13 and not interpolate annual average
     lau_df = lau_df.dropna(subset=["local_area_unemployment_rate"])
     # note the rounding bc BLS website specifies 1 sig figure
     lau_df = (
@@ -144,11 +135,12 @@ def transform_local_area_unemployment_rates(
     # join on area information
     area_df = transform_lau_areas(raw_area_df)
     df = lau_df.merge(area_df, on="series_id", how="left")
-    df = df[~df.geographic_level.isnull()]
+    # drop any records that we don't have MSA data for
+    df = df[~df.msa_code.isnull()]
     return df
 
 
-def transform_msa_codes(df: pd.DataFrame) -> pd.DataFrame:
+def transform_msa_area_defs(df: pd.DataFrame) -> pd.DataFrame:
     """Transform dataframe of MSA codes and names.
 
     Clean column names, enforce string types, pad FIPS codes with 0s,
@@ -186,12 +178,12 @@ def transform_msa_codes(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# TODO: what is data used for? only gives table of area_fips to area_title
-def transform_qcew_areas(df: pd.DataFrame) -> pd.DataFrame:
-    """Transform QCEW area information."""
+def transform_msa_county_crosswalk(df: pd.DataFrame) -> pd.DataFrame:
+    """Transform MSA to county crosswalk so it can connected to QCEW data."""
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
-    df = df.astype("string")
-    df["area_fips"] = df["area_fips"].str.zfill(5)
+    df = df.rename(columns={"county_code": "county_id_fips"})
+    df = df.astype(str)
+    df["county_id_fips"] = df.county_id_fips.str.zfill(5)
     return df
 
 
@@ -207,16 +199,15 @@ def transform_qcew_data(df: pd.DataFrame) -> pd.DataFrame:
         }
     )
     df["area_fips"] = df["area_fips"].str.zfill(5)
-    # add geographic level and geoid column
-    df = energy_comms.helpers.add_bls_qcew_geo_cols(df)
+    # only including MSA for now, not non-MSA
+    df = df[df["area_title"].str.contains("MSA")]
+    df = df.rename(columns={"area_fips": "msa_code"})
     cols = [
-        "area_fips",
+        "msa_code",
         "area_title",
         "year",
         "industry_code",
         "own_code",
         "annual_avg_emplvl",
-        "geographic_level",
-        "geoid",
     ]
     return df[cols]

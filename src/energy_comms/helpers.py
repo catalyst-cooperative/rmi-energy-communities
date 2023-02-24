@@ -3,12 +3,63 @@ import logging
 from typing import Any, Literal
 
 import geopandas
-import numpy as np
 import pandas as pd
 
 import pudl
 
 logger = logging.getLogger(__name__)
+
+
+def add_geometry_column(
+    df: pd.DataFrame,
+    census_geometry: Literal["state", "county", "tract"] = "county",
+    pudl_settings: dict[Any, Any] | None = None,
+    census_gdf: geopandas.GeoDataFrame | None = None,
+    add_name: bool = False,
+) -> geopandas.GeoDataFrame:
+    """Add a geometry column to a dataframe to make it a GeoDataFrame.
+
+    Prepare a dataframe for mapping by adding a geometry column for the
+    area represented by each record. Dataframe must have column with the
+    FIPS ID for each record at the level of ``census_geometry`` e.g.
+    county_id_fips.
+
+    Args:
+        df (pd.DataFrame): The dataframe that a column named "geometry" will be
+            added onto. Must have a string type FIPS column, named state_id_fips,
+            county_id_fips, or tract_id_fips that corresponds to the level of
+            ``census_geometry``.
+        census_geometry (str): Which set of Census geometries to read, must be one
+                of "state", "county", or "tract".
+        pudl_settings (dict or None): A dictionary of PUDL settings, including
+            paths to various resources like the Census DP1 SQLite database. If
+            None, the user defaults are used.
+        census_gdf (geopandas.GeoDataFrame): A dataframe of Census geometries containing columns
+            for geometry, geoid10 (FIPS code), and name. If None (the default),
+            this dataframe is generated from ``pudl.output.censusdp1tract.get_layer()``
+        add_name (boolean): Whether to add a column with the name of the geometry, e.g.
+            "Jones County" or "Census Tract 123"
+    """
+    col_names = {
+        "state": {"geoid10": "state_id_fips", "stusps10": "state_name"},
+        "county": {"geoid10": "county_id_fips", "namelsad10": "county_name"},
+        "tract": {"geoid10": "tract_id_fips", "namelsad10": "tract_name"},
+    }
+    if census_gdf is None:
+        census_gdf = pudl.output.censusdp1tract.get_layer(
+            layer=census_geometry, pudl_settings=pudl_settings
+        )
+    census_gdf = census_gdf.rename(columns=col_names[census_geometry])
+    census_gdf = census_gdf.rename_geometry("area_geometry")
+    geo_cols = ["area_geometry", f"{census_geometry}_id_fips"]
+    if add_name:
+        geo_cols += [f"{census_geometry}_name"]
+    gdf = df.merge(
+        census_gdf[geo_cols],
+        how="left",
+        on=f"{census_geometry}_id_fips",
+    )
+    return gdf
 
 
 def get_geometry_intersection(
@@ -49,25 +100,29 @@ def get_geometry_intersection(
             ``adjacent_id_fips`` is added, giving a list of geometries adjacent to the record.
     """
     logger.info("Finding intersecting Census geometries.")
-    output = gdf.copy()
     col_names = {
-        "state": {"geoid10": "state_id_fips", "stusps10": "state_name_census"},
-        "county": {"geoid10": "county_id_fips", "namelsad10": "county_name_census"},
-        "tract": {"geoid10": "tract_id_fips", "namelsad10": "tract_name_census"},
+        "state": {"geoid10": "state_id_fips", "stusps10": "state_name"},
+        "county": {"geoid10": "county_id_fips", "namelsad10": "county_name"},
+        "tract": {"geoid10": "tract_id_fips", "namelsad10": "tract_name"},
     }
     if census_gdf is None:
         census_gdf = pudl.output.censusdp1tract.get_layer(
             layer=census_geometry, pudl_settings=pudl_settings
         )
-    if output.crs is None:
-        output = output.set_crs(census_gdf.crs)
-    elif output.crs != census_gdf.crs:
+    if gdf.crs is None:
+        gdf = gdf.set_crs(census_gdf.crs)
+    elif gdf.crs != census_gdf.crs:
         logger.info(
-            f"Converting geodataframe CRS {output.crs} to match Census geodataframe CRS {census_gdf.crs}"
+            f"Converting geodataframe CRS {gdf.crs} to match Census geodataframe CRS {census_gdf.crs}"
         )
-        output = output.to_crs(census_gdf.crs)
-    output = output.sjoin(
-        census_gdf[["geometry"] + list(col_names[census_geometry].keys())],
+        gdf = gdf.to_crs(census_gdf.crs)
+    gdf = gdf.rename_geometry("site_geometry")
+    # create column to retain geometry of census area after joining
+    census_gdf["area_geometry"] = census_gdf["geometry"]
+    output = gdf.sjoin(
+        census_gdf[
+            ["geometry", "area_geometry"] + list(col_names[census_geometry].keys())
+        ],
         how="left",
         predicate="intersects",
     ).rename(columns=col_names[census_geometry])
@@ -157,57 +212,63 @@ def remove_invalid_lat_lon_records(
     return df
 
 
-def add_bls_qcew_geo_cols(qcew_df: pd.DataFrame) -> pd.DataFrame:
-    """Using BLS area codes, make a column indicating the geographic level of the record.
+def add_area_info(
+    df: pd.DataFrame,
+    fips_col: str,
+    add_state: bool = True,
+    add_county: bool = True,
+    state_df: pd.DataFrame = None,
+    county_df: pd.DataFrame = None,
+) -> pd.DataFrame:
+    """Add columns for state and/or county FIPS code, name, and abbreviation.
 
-    Geographic levels are counties, states, MSA, etc. In this case, since QCEW data
-    is filtered for county and MSA, only those geographic levels are found.
+    Adds columns ``state_id_fips``, ``state_name``, ``state_abbr``, ``county_id_fips``,
+    ``county_name``.
 
     Args:
-        qcew_df: Dataframe to add geographic levels to. Probably the QCEW transformed data.
+        df: The dataframe to add the state info onto. Must have a column with
+            a FIPS code (five digit county, tract, etc.) for each record.
+        fips_col: The name of the column with the FIPS code for each record.
+            Must be a string column.
+        add_state: Whether to add state FIPS, name, and abbreviation.
+            Default is True.
+        add_county: Whether to add county FIPS and name. Default is True.
+        state_df: Dataframe of state data. If None (the default), this dataframe
+            is generated from ``pudl.output.censusdp1tract.get_layer(layer="state")``.
+            This parameter is mostly used for testing purposes. Must have columns
+            ``state_id_fips``, ``state_name``, ``state_abbr``
+        county_df: Dataframe of county info. If None (the default), this dataframe
+            is generated from ``pudl.output.censusdp1tract.get_layer(layer="county")``.
+            This parameter is mostly used for testing purposes. Must have columns
+            ``county_id_fips``, ``county_name``
     """
-    df = qcew_df.copy()
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("Statewide"), "state", pd.NA
-    )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("Parish|City|Borough|County"),
-        "county",
-        df["geographic_level"],
-    )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("MSA"),
-        "metropolitan_stat_area",
-        df["geographic_level"],
-    )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("MicroSA"),
-        "micropolitan_stat_area",
-        df["geographic_level"],
-    )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("(Combined)"),
-        "aggregated_stat_area",
-        df["geographic_level"],
-    )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("TOTAL"), "nationwide", df["geographic_level"]
-    )
-    df["geographic_level"] = np.where(
-        df["area_title"].str.contains("Unknown"),
-        "undefined",
-        df["geographic_level"],
-    )
+    col_names = {
+        "state": {
+            "geoid10": "state_id_fips",
+            "name10": "state_name",
+            "stusps10": "state_abbr",
+        },
+        "county": {"geoid10": "county_id_fips", "namelsad10": "county_name"},
+    }
+    if add_state:
+        df["state_id_fips"] = df[fips_col].str[:2]
+        if state_df is None:
+            state_df = pudl.output.censusdp1tract.get_layer(layer="state").rename(
+                columns=col_names["state"]
+            )
+        df = df.merge(
+            state_df[list(col_names["state"].values())], how="left", on="state_id_fips"
+        )
+    if add_county:
+        df["county_id_fips"] = df[fips_col].str[:5]
+        if county_df is None:
+            county_df = pudl.output.censusdp1tract.get_layer(layer="county").rename(
+                columns=col_names["county"]
+            )
+        df = df.merge(
+            county_df[list(col_names["county"].values())],
+            how="left",
+            on="county_id_fips",
+        )
 
-    # add geoid column
-    df["geoid"] = df["area_fips"]
-    # to go from MSA code to MSA geoid
-    # take out C in MSA records and append extra 0
-    df["geoid"] = df["geoid"].str.replace("C", "")
-    # for MSAs, make geoid to match census crosswalk
-    df["geoid"] = np.where(
-        df["geographic_level"] == "metropolitan_stat_area",
-        df["geoid"] + "0",
-        df["geoid"],
-    )
     return df

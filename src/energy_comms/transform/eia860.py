@@ -13,7 +13,7 @@ COAL_CODES = ["ANT", "BIT", "LIG", "SUB", "SGC", "WC", "RC"]
 
 def transform(
     raw_df: pd.DataFrame,
-    census_geometry: Literal["state", "county", "tract"] = "tract",
+    census_geometry: Literal["county", "tract"] = "tract",
     get_proposed_retirements: bool = False,
     pudl_settings: dict[Any, Any] | None = None,
 ) -> pd.DataFrame:

@@ -1,14 +1,41 @@
 """Combine the data sources to find qualifying areas."""
 
 import logging
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
 
+import energy_comms
+
 logger = logging.getLogger(__name__)
 
 FOSSIL_NAICS_CODES = ["2121", "211", "213", "23712", "486", "4247", "22112"]
+
+# in New England states the MSA codes don't map perfectly from LAU to QCEW
+LAU_TO_QCEW_MSA_CODE_CORRECTIONS = {
+    "C7195": "C1486",
+    "C7345": "C2554",
+    "C7645": "C3598",
+    "C7075": "C1262",
+    "C7465": "C3034",
+    "C7675": "C3886",
+    "C7090": "C1270",
+    "C7165": "C1446",
+    "C7660": "C3834",
+    "C7810": "C4414",
+    "C7960": "C4934",
+    "C7495": "C3170",
+    "C7720": "C3930",
+    "C7240": "C1554",
+    "C7570": "C3530",
+    "C7285": "C1486",
+    "C7870": "C3530",
+    "C7555": "C3930",
+    "C7450": "C4934",
+    "C7305": "C1446",
+    "C7690": "C1446",
+}
 
 
 def fossil_employment_qualifying_areas(
@@ -16,17 +43,22 @@ def fossil_employment_qualifying_areas(
 ) -> pd.DataFrame:
     """Find qualifying areas that meet the employment criteria.
 
-    This criteria says any area that has (any time 2010 onwards) .17%
+    This criteria says any metropolitan statistical area or nonmetropolitan
+    statistical area that has (any time 2010 onwards) .17%
     or greater direct employment or 25% or greater local tax revenues
     related to extraction, processing, transport, or storage of coal, oil
-    or natural gas.
+    or natural gas. The Quarterly Census of Employment and Wages data doesn't
+    have data on the nonmetropolitan statistical area level, so we are just
+    looking at MSAs. We are also ignoring the tax revenues provision, as there isn't
+    a dataset of comprehensive tax revenues at a national level.
 
     Args:
-        qcew_df: Dataframe of the transformed QCEW data.
-        msa_df: Dataframe of the MSA area code information.
+        qcew_df: Dataframe of the transformed QCEW data containing
+            employment data for MSAs and nonMSAs.
+        msa_df: Dataframe of the MSA to county crosswalk.
 
     Returns:
-        Dataframe with areas that qualify under this criteria.
+        Dataframe with column to indicate whether a county qualifies under this criteria.
     """
     df = qcew_df.copy()
     # get data for total employees in an area
@@ -37,7 +69,7 @@ def fossil_employment_qualifying_areas(
     # get data for fossil fuel employees in an area
     fossil_employment_df = df.loc[df["industry_code"].isin(FOSSIL_NAICS_CODES)]
     fossil_employment_df = (
-        fossil_employment_df.groupby(["area_fips", "year"])["annual_avg_emplvl"]
+        fossil_employment_df.groupby(["msa_code", "year"])["annual_avg_emplvl"]
         .sum()
         .reset_index()
     )
@@ -46,7 +78,7 @@ def fossil_employment_qualifying_areas(
     )
     full_df = total_employment_df.merge(
         fossil_employment_df,
-        on=["area_fips", "year"],
+        on=["msa_code", "year"],
         how="outer",
         indicator=True,
     )
@@ -59,27 +91,24 @@ def fossil_employment_qualifying_areas(
     full_df = full_df[full_df.total_employees != 0]
     # Get percentage of fossil fuel employment
     full_df["percent_fossil_employment"] = (
-        full_df.fossil_employees / full_df.total_employees * 100
+        full_df.fossil_employees / full_df.total_employees
     )
     # area qualifies if fossil fuel employment is greater than .17%
     full_df["meets_fossil_employment_threshold"] = np.where(
-        full_df["percent_fossil_employment"] > 0.17, 1, 0
+        full_df["percent_fossil_employment"] > 0.0017, 1, 0
     )
     # merge in state, county, and MSA name information
-    full_df = full_df.merge(msa_df, on="geoid", how="left")
-    full_df = full_df.rename(columns={"county_id_fips": "county_fips_three_digit"})
-    # construct the full county FIPS code
-    full_df["county_id_fips"] = np.where(
-        full_df["geographic_level"] == "county",
-        full_df["geoid"],
-        full_df["state_id_fips"] + full_df["county_fips_three_digit"],
-    )
+    # and create a record for each county in an MSA
+    full_df = full_df.merge(msa_df, on="msa_code", how="left")
+    full_df["geoid"] = full_df["county_id_fips"]
 
     return full_df
 
 
 def unemployment_rate_qualifying_areas(
-    national_unemployment_df: pd.DataFrame, lau_unemployment_df: pd.DataFrame
+    national_unemployment_df: pd.DataFrame,
+    lau_unemployment_df: pd.DataFrame,
+    msa_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """Find qualifying areas that meet the unemployment rate criteria.
 
@@ -92,9 +121,10 @@ def unemployment_rate_qualifying_areas(
             ``energy_comms.transform.bls.transform_national_unemployment_rates()``
         lau_unemployment_df: Transformed dataframe of local area unemployment rates. The
             result of ``energy_comms.transform.bls.transform_local_area_unemployment_rates()``
+        msa_df: Dataframe of the MSA to county crosswalk.
 
     Returns:
-        Dataframe with areas that qualify under this criteria.
+        Dataframe with column to indicate whether a county qualifies under this criteria.
     """
     full_df = lau_unemployment_df.merge(
         national_unemployment_df,
@@ -109,11 +139,31 @@ def unemployment_rate_qualifying_areas(
         0,
     )
 
+    # fix MSA codes that are different in the QCEW MSA to county crosswalk
+    full_df = full_df.replace({"msa_code": LAU_TO_QCEW_MSA_CODE_CORRECTIONS})
+    full_df = full_df.merge(msa_df, on="msa_code", how="left")
+    full_df["geoid"] = full_df["county_id_fips"]
+    if len(full_df[full_df.geoid.isnull()]) != 0:
+        bad_codes = (
+            full_df[full_df.geoid.isnull()]
+            .drop_duplicates(subset=["msa_code"])["msa_code"]
+            .unique()
+        )
+        logger.warning(
+            f"In the LAU data the MSA codes {bad_codes} don't have records "
+            "in the MSA to county crosswalk. These MSAs likely have "
+            "different codes in the crosswalk."
+        )
+
     return full_df
 
 
 def employment_criteria_qualifying_areas(
-    fossil_employment_df: pd.DataFrame, unemployment_df: pd.DataFrame
+    fossil_employment_df: pd.DataFrame,
+    unemployment_df: pd.DataFrame,
+    pudl_settings: dict[Any, Any] | None = None,
+    census_state_df: pd.DataFrame = None,
+    census_county_df: pd.DataFrame = None,
 ) -> pd.DataFrame:
     """Combine employment criteria dataframes to find all qualifying areas.
 
@@ -127,6 +177,17 @@ def employment_criteria_qualifying_areas(
             Result of ``fossil_employment_qualifying_areas``.
         unemployment_df: Qualifying areas for unemployment criteria. Result of
             ``unemployment_rate_qualifying_areas``.
+        pudl_settings: Default is None. Used for adding geometry column onto dataframe.
+            A dictionary of PUDL settings, including paths to various resources like the
+            Census DP1 SQLite database. If None, the user defaults are used.
+        census_state_df: Dataframe of state data. If None (the default), this dataframe
+            is generated from ``pudl.output.censusdp1tract.get_layer(layer="state")``.
+            This parameter is mostly used for testing purposes. Must have columns
+            ``state_id_fips``, ``state_name``, ``state_abbr``
+        census_county_df: Dataframe of county info. If None (the default), this dataframe
+            is generated from ``pudl.output.censusdp1tract.get_layer(layer="county")``.
+            This parameter is mostly used for testing purposes. Must have columns
+            ``county_id_fips``, ``county_name``
     """
     fossil_employment_df = fossil_employment_df[
         fossil_employment_df["meets_fossil_employment_threshold"] == 1
@@ -134,48 +195,58 @@ def employment_criteria_qualifying_areas(
     unemployment_df = unemployment_df[
         unemployment_df["meets_unemployment_threshold"] == 1
     ]
-    # drop column for no overlap with fossil df
-    unemployment_df = unemployment_df.drop(
-        columns=[
-            "state_id_fips",
-        ]
-    )
     df = fossil_employment_df.merge(
-        unemployment_df,
+        unemployment_df[["geoid", "year", "meets_unemployment_threshold"]],
         on=["geoid", "year"],
         how="left",
     )
-    df = df.fillna({"meets_unemployment_threshold": 0})
-    df = df[
-        (df["meets_fossil_employment_threshold"] == 1)
-        & (df["meets_unemployment_threshold"] == 1)
-    ]
+    df = df[~(df.meets_unemployment_threshold.isnull())]
     df = df.drop_duplicates(subset=["geoid"])
+    df = energy_comms.helpers.add_area_info(
+        df,
+        fips_col="county_id_fips",
+        add_state=True,
+        add_county=False,
+        state_df=census_state_df,
+        county_df=census_county_df,
+    ).pipe(
+        energy_comms.helpers.add_geometry_column,
+        census_geometry="county",
+        pudl_settings=pudl_settings,
+        census_gdf=census_county_df,
+    )
     df["qualifying_criteria"] = "fossil_fuel_employment"
-    df["qualifying_area"] = "MSA or non-MSA"
-    df = df.rename(columns={"area_title": "census_name"})
+    df["qualifying_area"] = "MSA"
+    df = df.rename(columns={"county_title": "county_name", "area_title": "site_name"})
     df = df[
         [
-            "census_name",
+            "county_name",
             "county_id_fips",
             "state_id_fips",
-            "state",
+            "state_abbr",
+            "state_name",
             "geoid",
+            "site_name",
             "qualifying_criteria",
             "qualifying_area",
+            "area_geometry",
         ]
     ]
     return df
 
 
-# TODO: merge on names of the geometry
 def _explode_adjacent_id_fips(
     df: pd.DataFrame,
-    census_geometry: Literal["state", "county", "tract"] = "tract",
+    census_geometry: Literal["county", "tract"] = "tract",
     closure_type: str = "coalmine",
 ) -> pd.DataFrame:
     adj_records = pd.DataFrame()
     adj_records[f"{census_geometry}_id_fips"] = df.adjacent_id_fips.explode()
+    adj_records = energy_comms.helpers.add_geometry_column(
+        adj_records,
+        census_geometry=census_geometry,
+        add_name=True,
+    )
     adj_records["qualifying_area"] = f"{census_geometry}"
     adj_records["qualifying_criteria"] = f"{closure_type}_adjacent_{census_geometry}"
     adj_records = adj_records.drop_duplicates()
@@ -185,7 +256,7 @@ def _explode_adjacent_id_fips(
 def coal_criteria_qualifying_areas(
     msha_df: pd.DataFrame,
     eia_df: pd.DataFrame,
-    census_geometry: Literal["state", "county", "tract"] = "tract",
+    census_geometry: Literal["county", "tract"] = "tract",
 ) -> pd.DataFrame:
     """Combine MSHA coal mines and EIA coal plants to find all qualifying areas.
 
@@ -195,40 +266,52 @@ def coal_criteria_qualifying_areas(
         msha_df: The transformed MSHA data.
         eia_df: The transformed EIA data.
         census_geometry: The Census geometry level of qualifying areas. Must
-            be one of "state", "county", or "tract".
+            be "county" or "tract".
     """
     msha_df = msha_df.rename(
         columns={
-            f"{census_geometry}_name_census": "census_name",
             "current_mine_name": "site_name",
         }
     )
     eia_df = eia_df.rename(
         columns={
-            f"{census_geometry}_name_census": "census_name",
             "plant_name_eia": "site_name",
         }
     )
-    cols = [
-        f"{census_geometry}_id_fips",
-        "census_name",
-        "site_name",
-        "latitude",
-        "longitude",
-        "geometry",
-        "qualifying_area",
-        "qualifying_criteria",
-        "adjacent_id_fips",
-    ]
-    msha_df = msha_df[cols]
-    eia_df = eia_df[cols]
-
+    # create records for all areas adjacent to a qualifying area
     adj_msha = _explode_adjacent_id_fips(
-        msha_df, census_geometry=census_geometry, closure_type="coalmine"
+        msha_df, census_geometry=census_geometry, closure_type="coal_mine"
     )
     adj_eia = _explode_adjacent_id_fips(
         eia_df, census_geometry=census_geometry, closure_type="coal_plant"
     )
+    df = pd.concat([msha_df, eia_df, adj_msha, adj_eia]).to_crs("EPSG:4269")
+    df["geoid"] = df[f"{census_geometry}_id_fips"]
+    if census_geometry == "tract":
+        df = energy_comms.helpers.add_area_info(
+            df, fips_col="tract_id_fips", add_state=True, add_county=True
+        )
+    else:
+        df = energy_comms.helpers.add_area_info(
+            df, fips_col="county_id_fips", add_state=True, add_county=False
+        )
+    cols = [
+        "county_name",
+        "county_id_fips",
+        "state_id_fips",
+        "state_abbr",
+        "state_name",
+        "geoid",
+        "site_name",
+        "qualifying_criteria",
+        "qualifying_area",
+        "latitude",
+        "longitude",
+        "site_geometry",
+        "area_geometry",
+    ]
+    if census_geometry == "tract":
+        cols = ["tract_name", "tract_id_fips"] + cols
+    df = df[cols]
 
-    df = pd.concat([msha_df, eia_df, adj_msha, adj_eia])
     return df

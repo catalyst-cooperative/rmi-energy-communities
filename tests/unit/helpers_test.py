@@ -66,11 +66,12 @@ def test_geometry_intersections(test_dir: pathlib.Path) -> None:
             "state",
             "longitude",
             "latitude",
-            "geometry",
+            "site_geometry",
             "tract_id_fips",
-            "tract_name_census",
+            "tract_name",
             "adjacent_id_fips",
         ],
+        geometry="site_geometry",
         crs="EPSG:4269",
     )
 
@@ -80,6 +81,8 @@ def test_geometry_intersections(test_dir: pathlib.Path) -> None:
         add_adjacent_geoms=True,
         census_gdf=census_gdf,
     )
+    # drop area_geometry column because it is too hard to check in a unit test
+    actual = actual.drop(columns=["area_geometry"])
     # can't hash lists in checking df equality, check separately
     _check_adjacent_id_fips(
         actual["adjacent_id_fips"], expected_gdf["adjacent_id_fips"]

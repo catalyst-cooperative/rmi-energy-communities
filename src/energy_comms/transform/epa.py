@@ -12,15 +12,15 @@ logger = logging.getLogger(__name__)
 
 def transform(
     df: pd.DataFrame,
-    census_geometry: Literal["state", "county", "tract"] = "county",
+    census_geometry: Literal["county", "tract"] = "county",
     pudl_settings: dict[Any, Any] | None = None,
 ) -> pd.DataFrame:
     """Map brownfields to counties, add columns for map integration.
 
     Arguments:
         df (pd.DataFrame): Raw EPA brownfields dataframe
-        census_geometry (str): Which set of Census geometries to read, must be one
-            of "state", "county", or "tract".
+        census_geometry (str): Which set of Census geometries to read, must be
+        "county" or "tract".
         pudl_settings (dict or None): A dictionary of PUDL settings, including
             paths to various resources like the Census DP1 SQLite database. If
             None, the user defaults are used.

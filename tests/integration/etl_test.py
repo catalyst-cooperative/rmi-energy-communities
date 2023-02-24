@@ -34,7 +34,7 @@ def test_pudl_engine(pudl_engine_fixture: dict[Any, Any], table_name: str) -> No
     [("tract"), ("county")],
 )
 def test_msha_etl(
-    census_res: Literal["state", "county", "tract"],
+    census_res: Literal["county", "tract"],
     pudl_settings_fixture: dict[Any, Any] | None,
 ) -> None:
     """Verify that we can ETL the MSHA data."""
@@ -58,7 +58,7 @@ def test_msha_etl(
 def test_eia860_etl(
     pudl_engine_fixture: sa.engine.Engine,
     pudl_settings_fixture: dict[Any, Any] | None,
-    census_res: Literal["state", "county", "tract"],
+    census_res: Literal["county", "tract"],
 ) -> None:
     """Verify that we can ETL the EIA 860 data."""
     raw_df = energy_comms.extract.eia860.extract(pudl_engine=pudl_engine_fixture)
@@ -93,26 +93,71 @@ def test_epa_etl(pudl_settings_fixture: dict[Any, Any] | None) -> None:
 
 def test_bls_etl() -> None:
     """Verify that we can ETL the BLS employment data."""
-    # for speed, only extract 2010-2014 data
+    # begin with unemployment criteria
+    # for speed, only extract 2020-2024 data
     nat_unemployment_df = energy_comms.extract.bls.extract_national_unemployment_rates()
     if nat_unemployment_df.empty:
         raise AssertionError(
             "National unemployment rate extract returned empty dataframe."
         )
-    raw_data_df = energy_comms.extract.bls.extract_lau_data(
-        file_list=["la.data.0.CurrentU10-14"], update=True
+    nat_unemployment_df = (
+        energy_comms.transform.bls.transform_national_unemployment_rates(
+            nat_unemployment_df
+        )
     )
-    if raw_data_df.empty:
+    raw_lau_df = energy_comms.extract.bls.extract_lau_data(
+        file_list=["la.data.0.CurrentU20-24"], update=True
+    )
+    if raw_lau_df.empty:
         raise AssertionError(
             "Local unemployment data extract returned empty dataframe."
         )
-    raw_area_df = energy_comms.extract.bls.extract_lau_area_table(update=True)
-    if raw_area_df.empty:
+    raw_lau_area_df = energy_comms.extract.bls.extract_lau_area_table(update=True)
+    if raw_lau_area_df.empty:
         raise AssertionError(
             "Local unemployment data areas extract returned empty dataframe."
         )
-    msa_codes = energy_comms.extract.bls.extract_msa_codes()
-    if msa_codes.empty:
+    lau_df = energy_comms.transform.bls.transform_local_area_unemployment_rates(
+        raw_lau_df=raw_lau_df, raw_area_df=raw_lau_area_df
+    )
+    msa_county_crosswalk = energy_comms.extract.bls.extract_msa_county_crosswalk()
+    if msa_county_crosswalk.empty:
         raise AssertionError(
-            "Metropolitan Statistical Area code definitions extract returned empty dataframe."
+            "MSA to county crosswalk extract returned empty dataframe."
+        )
+    msa_county_crosswalk = energy_comms.transform.bls.transform_msa_county_crosswalk(
+        msa_county_crosswalk
+    )
+    unemployment_df = (
+        energy_comms.generate_qualifying_areas.unemployment_rate_qualifying_areas(
+            national_unemployment_df=nat_unemployment_df,
+            lau_unemployment_df=lau_df,
+            msa_df=msa_county_crosswalk,
+        )
+    )
+    if unemployment_df.empty:
+        raise AssertionError("Unemployment criteria function returned empty dataframe.")
+    if unemployment_df.geoid.isnull().values.any():
+        raise AssertionError(
+            "Unemployment criteria dataframe contains null values in geoid column."
+        )
+
+    # now do fossil fuel employment criteria with 2020 data
+    year = 2020
+    qcew_df = energy_comms.extract.bls.extract_qcew_data(years=[year], update=True)
+    if qcew_df.empty:
+        raise AssertionError(f"{year} QCEW data extract returned empty dataframe.")
+    qcew_df = energy_comms.transform.bls.transform_qcew_data(qcew_df)
+    fossil_employment_df = (
+        energy_comms.generate_qualifying_areas.fossil_employment_qualifying_areas(
+            qcew_df=qcew_df, msa_df=msa_county_crosswalk
+        )
+    )
+    if fossil_employment_df.empty:
+        raise AssertionError(
+            "Fossil fuel employment criteria function returned empty dataframe."
+        )
+    if fossil_employment_df.geoid.isnull().values.any():
+        raise AssertionError(
+            "Fossil fuel employment criteria dataframe contains null values in geoid column."
         )

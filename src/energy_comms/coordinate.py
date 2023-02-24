@@ -9,13 +9,13 @@ from energy_comms.extract.bls import QCEW_YEARS
 
 
 def get_coal_criteria_qualifying_areas(
-    census_geometry: Literal["state", "county", "tract"] = "tract"
+    census_geometry: Literal["county", "tract"] = "tract"
 ) -> pd.DataFrame:
     """Get dataframe of qualifying areas under the closed coal mine or plant criteria.
 
     Args:
         census_geometry: The Census geometry level of qualifying areas. Must
-            be one of "state", "county", or "tract".
+            be one of "county", or "tract".
     """
     msha_raw_df = energy_comms.extract.msha.extract()
     msha_df = energy_comms.transform.msha.transform(
@@ -32,31 +32,46 @@ def get_coal_criteria_qualifying_areas(
 
 
 def get_brownfields_criteria_qualifying_areas(
-    census_geometry: Literal["state", "county", "tract"] = "tract"
+    census_geometry: Literal["county", "tract"] = "tract"
 ) -> pd.DataFrame:
     """Get dataframe of qualifying areas under the brownfields criteria.
 
     Args:
         census_geometry: The Census geometry level of qualifying areas. Must
-            be one of "state", "county", or "tract".
+            be one of "county", or "tract".
     """
     epa_raw_df = energy_comms.extract.epa.extract()
     epa_df = energy_comms.transform.epa.transform(
         epa_raw_df, census_geometry=census_geometry
     )
+    if census_geometry == "tract":
+        epa_df = energy_comms.helpers.add_area_info(
+            epa_df, fips_col="tract_id_fips", add_state=True, add_county=True
+        )
+    else:
+        epa_df = energy_comms.helpers.add_area_info(
+            epa_df, fips_col="county_id_fips", add_state=True, add_county=False
+        )
+    epa_df["geoid"] = epa_df[f"{census_geometry}_id_fips"]
     cols = [
-        f"{census_geometry}_id_fips",
-        f"{census_geometry}_name_census",
+        "county_name",
+        "county_id_fips",
+        "state_id_fips",
+        "state_abbr",
+        "state_name",
+        "geoid",
+        "qualifying_criteria",
+        "qualifying_area",
         "site_name",
         "latitude",
         "longitude",
-        "geometry",
-        "qualifying_area",
-        "qualifying_criteria",
+        "site_geometry",
+        "area_geometry",
     ]
-    df = epa_df[cols]
-    df = df.rename(columns={f"{census_geometry}_name_census": "census_name"})
-    return df
+    if census_geometry == "tract":
+        cols = ["tract_name", "tract_id_fips"] + cols
+    epa_df = epa_df[cols]
+    return epa_df
 
 
 def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFrame:
@@ -68,8 +83,8 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
     """
     # start with fossil fuel employment criteria
     energy_comms.extract.bls.download_qcew_data(update=update)
-    msa_raw_df = energy_comms.extract.bls.extract_msa_codes()
-    msa_df = energy_comms.transform.bls.transform_msa_codes(msa_raw_df)
+    msa_raw_df = energy_comms.extract.bls.extract_msa_county_crosswalk()
+    msa_df = energy_comms.transform.bls.transform_msa_county_crosswalk(msa_raw_df)
     # do one year at a time so the concatenated dataframe isn't as big
     fossil_employment_df = pd.DataFrame()
     for year in QCEW_YEARS:
@@ -96,7 +111,7 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
     )
     unemployment_df = (
         energy_comms.generate_qualifying_areas.unemployment_rate_qualifying_areas(
-            cps_df, lau_df
+            cps_df, lau_df, msa_df
         )
     )
 
@@ -109,8 +124,8 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
 
 
 def get_all_qualifying_areas(
-    coal_census_geometry: Literal["state", "county", "tract"] = "tract",
-    brownfields_census_geometry: Literal["state", "county", "tract"] = "tract",
+    coal_census_geometry: Literal["county", "tract"] = "tract",
+    brownfields_census_geometry: Literal["county", "tract"] = "tract",
     update_employment: bool = False,
 ) -> pd.DataFrame:
     """Get dataframe of all qualifying areas from all criteria."""
@@ -119,5 +134,7 @@ def get_all_qualifying_areas(
         census_geometry=brownfields_census_geometry
     )
     employment_df = get_employment_criteria_qualifying_areas(update=update_employment)
-    full_df = pd.concat([coal_df, brownfields_df, employment_df], ignore_index=True)
+    full_df = pd.concat(
+        [coal_df, brownfields_df, employment_df], ignore_index=True
+    ).set_crs("EPSG:4269")
     return full_df

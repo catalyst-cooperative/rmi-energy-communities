@@ -20,7 +20,7 @@ setup(
     use_scm_version=True,
     author="Catalyst Cooperative",
     author_email="pudl@catalyst.coop",
-    maintainer="Chesire Cat",
+    maintainer="Cheshire Cat",
     maintainer_email="pudl@catalyst.coop",
     url="",  # Can be repo or docs URL if no separate web page exists.
     project_urls={

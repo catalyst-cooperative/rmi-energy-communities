@@ -10,6 +10,7 @@ from datetime import date
 import numpy as np
 import pandas as pd
 import requests
+from bs4 import BeautifulSoup
 from requests.models import HTTPError
 
 import energy_comms
@@ -130,6 +131,34 @@ def extract_lau_area_table(update: bool = False) -> pd.DataFrame:
 def extract_lau_footnote_table(update: bool = False) -> pd.DataFrame:
     """Extract LAU footnotes codes table."""
     df = extract_lau_data(file_list=[LAU_FOOTNOTE_FILENAME], update=update)
+    return df
+
+
+def extract_msa_codes() -> pd.DataFrame:
+    """Extract code definitions of Metropolitan Statistical Areas.
+
+    Gives codes and names for Metropolitan Statistical Areas and
+    non-Metropolitan Statistical Areas.
+
+    See https://www.bls.gov/oes/current/msa_def.htm for more details.
+    """
+    resp = requests.get(MSA_URL)
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    excel_files = []
+    for link in soup.select('a[href*=".xls"]'):
+        excel_files.append(link["href"])
+    if excel_files == []:
+        raise AssertionError(f"No Excel files for MSA definitions found at {MSA_URL}")
+    if EXPECTED_MSA_FILENAME not in excel_files:
+        logger.warning(
+            f"The expected May 2021 MSA definitions filename was not found. \
+            Using {excel_files[0]}. The old filename was likely replaced with new definitions."
+        )
+        file_url = excel_files[0]
+    else:
+        file_url = EXPECTED_MSA_FILENAME
+    df = pd.read_excel("https://www.bls.gov" + file_url)
     return df
 
 

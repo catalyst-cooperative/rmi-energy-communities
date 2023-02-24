@@ -116,13 +116,13 @@ areas that qualify under the employment criteria run:
 .. code:: bash
 
    get_employment_qualifying_areas --update_employment_data True
-   
+
 **Without Command Line:**
 
 To generate these output dataframes not from the command line, you can call
 the functions in the ``energy_comms.coordinate`` module.
-   
- 
+
+
 **Output Dataframe Columns:**
 
 ``county_id_fips``, ``county_name``, ``state_id_fips``, ``state_name``,

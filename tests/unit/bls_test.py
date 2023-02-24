@@ -124,7 +124,7 @@ def test_employment_qualifier(test_dir: pathlib.Path) -> None:
             "state_abbr": "TX",
             "state_name": "Texas",
             "geoid": ["48059", "48253", "48441"],
-            "site_name": "Abilene, TX",
+            "site_name": "Abilene, TX MSA",
             "qualifying_criteria": "fossil_fuel_employment",
             "qualifying_area": "MSA",
         }

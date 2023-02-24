@@ -64,8 +64,19 @@ Generating Outputs
 
 To generate output dataframes of the qualifying energy community areas you can run
 the following commands from your command line once the ``energy_comms`` package is
-installed. For more information about what these qualifying criteria mean, see the
-below section on IRA criteria.
+installed. There will be the county FIPS and name for every record, so for an
+MSA that qualifies under the employment criteria, there will be a record for each
+county in that MSA. If a Census tract qualifies under the coal criteria, the
+``county_id_fips`` and ``county_name`` column will contains the FIPS and name for
+the county that the tract is contained in. For more information about what these
+qualifying criteria mean, see the below section on IRA criteria.
+
+**Command Line Arguments**:
+
+- ``--coal_area``: 
+- ``--brownfields_area``:
+- ``--update_employment_data``:
+- ``--output_filepath``:
 
 Note that for the coal closure and brownfields criteria you can specify the
 census geometry area that qualifies for the criteria e.g. tract, county, state.

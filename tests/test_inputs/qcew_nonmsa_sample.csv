@@ -1,0 +1,8 @@
+msa_code,county_id_fips,area_title,year,industry_code,own_code,annual_avg_emplvl
+100004,01005,"Southeast Alabama nonmetropolitan area",2020,10,0,7935
+100004,01005,"Southeast Alabama nonmetropolitan area",2020,211,5,800
+100004,01109,"Southeast Alabama nonmetropolitan area",2020,10,0,14334
+100004,01109,"Southeast Alabama nonmetropolitan area",2020,23712,5,900
+900001,09005,"Connecticut nonmetropolitan area",2020,10,0,56898
+900001,09015,"Connecticut nonmetropolitan area",2020,10,0,35915
+900001,09015,"Connecticut nonmetropolitan area",2020,211,0,100

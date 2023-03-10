@@ -83,18 +83,26 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
     """
     # start with fossil fuel employment criteria
     energy_comms.extract.bls.download_qcew_data(update=update)
-    msa_raw_df = energy_comms.extract.bls.extract_msa_county_crosswalk()
-    msa_df = energy_comms.transform.bls.transform_msa_county_crosswalk(msa_raw_df)
+    msa_county_raw_df = energy_comms.extract.bls.extract_msa_county_crosswalk()
+    msa_to_county_df = energy_comms.transform.bls.transform_msa_county_crosswalk(
+        msa_county_raw_df
+    )
+    non_msa_raw_df = energy_comms.extract.bls.extract_nonmsa_area_defs()
+    non_msa_df = energy_comms.transform.bls.transform_nonmsa_area_defs(non_msa_raw_df)
     # do one year at a time so the concatenated dataframe isn't as big
     fossil_employment_df = pd.DataFrame()
     for year in QCEW_YEARS:
         year_df = energy_comms.extract.bls.extract_qcew_data(years=[year])
         if year_df.empty:
             continue
-        year_df = energy_comms.transform.bls.transform_qcew_data(year_df)
+        year_msa_df, year_nonmsa_df = energy_comms.transform.bls.transform_qcew_data(
+            year_df, non_msa_df=non_msa_df
+        )
         year_df = (
             energy_comms.generate_qualifying_areas.fossil_employment_qualifying_areas(
-                year_df, msa_df
+                qcew_msa_df=year_msa_df,
+                qcew_non_msa_county_df=year_nonmsa_df,
+                msa_to_county=msa_to_county_df,
             )
         )
         fossil_employment_df = pd.concat([fossil_employment_df, year_df])
@@ -103,15 +111,22 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
     cps_raw_df = energy_comms.extract.bls.extract_national_unemployment_rates()
     lau_raw_df = energy_comms.extract.bls.extract_lau_rates(update=update)
     lau_area_raw_df = energy_comms.extract.bls.extract_lau_area_table(update=update)
+    lau_area_df = energy_comms.transform.bls.transform_lau_areas(lau_area_raw_df)
     cps_df = energy_comms.transform.bls.transform_national_unemployment_rates(
         cps_raw_df
     )
-    lau_df = energy_comms.transform.bls.transform_local_area_unemployment_rates(
-        lau_raw_df, lau_area_raw_df
+    (
+        lau_msa_df,
+        lau_non_msa_df,
+    ) = energy_comms.transform.bls.transform_local_area_unemployment_rates(
+        raw_lau_df=lau_raw_df, area_df=lau_area_df, non_msa_df=non_msa_df
     )
     unemployment_df = (
         energy_comms.generate_qualifying_areas.unemployment_rate_qualifying_areas(
-            cps_df, lau_df, msa_df
+            national_unemployment_df=cps_df,
+            lau_msa_df=lau_msa_df,
+            lau_non_msa_county_df=lau_non_msa_df,
+            msa_to_county=msa_to_county_df,
         )
     )
 

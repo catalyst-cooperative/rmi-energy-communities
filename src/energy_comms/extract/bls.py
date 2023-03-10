@@ -134,11 +134,13 @@ def extract_lau_footnote_table(update: bool = False) -> pd.DataFrame:
     return df
 
 
-def extract_msa_area_defs() -> pd.DataFrame:
-    """Extract code definitions of Metropolitan Statistical Areas.
+def extract_nonmsa_area_defs() -> pd.DataFrame:
+    """Extract code definitions of nonmetropolitan statistical areas.
 
     Gives codes and names for Metropolitan Statistical Areas and
-    non-Metropolitan Statistical Areas.
+    nonmetropolitan Statistical Areas, but we want this table for the
+    nonmetropolitan statistical area data. It lists the counties that
+    comprise nonMSAs.
 
     See https://www.bls.gov/oes/current/msa_def.htm for more details.
     """

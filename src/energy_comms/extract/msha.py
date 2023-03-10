@@ -23,7 +23,7 @@ def get_metadata(filename: str = "metadata.txt") -> None:
     Args:
         filename: Name for the downloaded metadata file.
     """
-    m = requests.get(METADATA_URL)
+    m = requests.get(METADATA_URL, timeout=10)
     if m.status_code != 200:
         raise HTTPError(
             f"Bad response from Mine Data Retrieval System metadata. Status code: {m.status_code}"
@@ -39,7 +39,7 @@ def extract() -> pd.DataFrame:
     """Download mines zip file from MSHA site."""
     logger.info("Retrieving MSHA data.")
 
-    r = requests.get(SOURCE_URL)
+    r = requests.get(SOURCE_URL, timeout=10)
     if r.status_code != 200:
         raise HTTPError(
             f"Bad response from Mine Data Retrieval System. Status code: {r.status_code}"

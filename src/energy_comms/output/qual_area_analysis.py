@@ -17,7 +17,7 @@ def get_brownfield_acreage_agg() -> pd.Series:
     """
     epa_raw = energy_comms.extract.epa.extract(update=False)
     epa_df = energy_comms.transform.epa.transform(epa_raw)
-    acreage = epa_df.groupby("county_id_fips")["acreage"].sum().round(2)
+    acreage = epa_df.groupby("county_id_fips")["brownfield_acreage"].sum().round(2)
     return acreage
 
 

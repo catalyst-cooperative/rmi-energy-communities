@@ -1,6 +1,7 @@
 """Combine the data sources to find qualifying areas."""
 
 import logging
+import math
 from typing import Any, Literal
 
 import numpy as np
@@ -168,15 +169,19 @@ def unemployment_rate_qualifying_areas(
     full_msa_df = full_msa_df.merge(msa_to_county, on="msa_code", how="left")
 
     # now handle non MSA counties
-    # first replace the county level unemployment rate with the average
-    # unemployment rate of that county's nonMSA.
-    full_non_msa_df = lau_non_msa_county_df.drop(
-        columns=["local_area_unemployment_rate"]
+    non_msa_unemployment_rates = lau_non_msa_county_df.groupby(["msa_code", "year"])[
+        "total_unemployment", "total_labor_force"
+    ].sum()
+    non_msa_unemployment_rates["local_area_unemployment_rate"] = (
+        non_msa_unemployment_rates["total_unemployment"]
+        / non_msa_unemployment_rates["total_labor_force"]
+        # round down to three decimals and make percent, not simplifying expression for clarity
+    ).apply(lambda x: math.floor(x * 1000) / 1000) * 100
+    non_msa_unemployment_rates = non_msa_unemployment_rates.drop(
+        columns=["total_unemployment", "total_labor_force"]
     )
-    full_non_msa_df = full_non_msa_df.merge(
-        lau_non_msa_county_df.groupby(["msa_code", "year"])[
-            "local_area_unemployment_rate"
-        ].mean(),
+    full_non_msa_df = lau_non_msa_county_df.merge(
+        non_msa_unemployment_rates,
         how="left",
         left_on=["msa_code", "year"],
         right_index=True,

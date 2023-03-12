@@ -111,7 +111,8 @@ class TestEmploymentQualification:
                 "year": [2019, 2020, 2019, 2020],
                 "msa_name": "Southeast Alabama nonmetropolitan area",
                 "msa_code": "100004",
-                "local_area_unemployment_rate": [4.0, 7.8, 3.4, 5.5],
+                "total_unemployment": [344.7, 675.9, 536.7, 864.8],
+                "total_labor_force": [8636.2, 8680.2, 15570.0, 15840.6],
                 "county_id_fips": ["01005"] * 2 + ["01109"] * 2,
             }
         )
@@ -142,10 +143,10 @@ class TestEmploymentQualification:
                     5.6,
                     5.6,
                     17.0,
-                    3.7,
-                    6.65,
-                    3.7,
-                    6.65,
+                    3.6,
+                    6.2,
+                    3.6,
+                    6.2,
                 ],
                 "msa_name": ["Abilene, TX Metropolitan Statistical Area"] * 6
                 + ["Yuma, AZ Metropolitan Statistical Area"]

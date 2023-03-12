@@ -74,8 +74,7 @@ def transform_lau_areas(raw_df: pd.DataFrame) -> pd.DataFrame:
     # construct the MSA code for the MSA to county crosswalk
     df.loc[df.area_code.str[:2] == "MT", "msa_code"] = "C" + df["area_code"].str[4:8]
     df.loc[df.area_code.str[:2] == "CN", "county_id_fips"] = df["area_code"].str[2:7]
-    # 03 is the unemployment rate code
-    df["series_id"] = df["series_id"] + "03"
+
     return df
 
 
@@ -102,11 +101,8 @@ def transform_local_area_unemployment_rates(
     lau_df = raw_lau_df.copy()
     lau_df.columns = lau_df.columns.str.strip().str.lower()
     lau_df["series_id"] = lau_df["series_id"].str.strip()
-    lau_df = lau_df.rename(columns={"value": "local_area_unemployment_rate"})
     # convert to float and make invalid values null
-    lau_df["local_area_unemployment_rate"] = pd.to_numeric(
-        lau_df["local_area_unemployment_rate"], errors="coerce"
-    )
+    lau_df["value"] = pd.to_numeric(lau_df["value"], errors="coerce")
     lau_df = lau_df.astype(
         {
             "year": "Int64",
@@ -114,38 +110,51 @@ def transform_local_area_unemployment_rates(
             "series_id": "string",
         }
     )
-    # filter out M13 (annual average) values and do a groupby + average
-    # later becuase the M13 values are null (footnote code U) when there
-    # is a missing monthly value (footnote code N)
+    # filter out M13 (annual average) values
     lau_df = lau_df[(lau_df.period >= "M01") & (lau_df.period <= "M12")]
     # filter for just MSAs and counties
     lau_df = lau_df[lau_df.series_id.str[3:5].isin(["MT", "CN"])]
-    # filter for unemployent rate statistics (last two digits is measure_code)
-    lau_df = lau_df[lau_df.series_id.str[-2:] == "03"]
+    # get the unemployment rate, unemployment total, and labor force total stats
+    lau_df = lau_df[lau_df.series_id.str[-2:].isin(["03", "04", "06"])]
+    lau_df = lau_df.dropna(subset=["value"])
     # take an annual average, didn't use M13 here because it is null
     # (footnote code U) when any monthly value is missing (footnote code N)
-    # but maybe it's best to use M13 and not interpolate annual average
-    lau_df = lau_df.dropna(subset=["local_area_unemployment_rate"])
     # note the rounding bc BLS website specifies 1 sig figure
     lau_df = (
-        lau_df.groupby(by=["series_id", "year"])["local_area_unemployment_rate"]
-        .mean()
-        .round(1)
-        .reset_index()
+        lau_df.groupby(by=["series_id", "year"])["value"].mean().round(1).reset_index()
     )
-    # join on area information
-    df = lau_df.merge(area_df, on="series_id", how="left")
-
     # get just the MSA records
-    lau_msa_df = df[~df.msa_code.isnull()]
+    lau_msa_df = lau_df[lau_df.series_id.str[3:5] == "MT"]
+    # filter for unemployent rate statistics (last two digits is measure_code)
+    lau_msa_df = lau_msa_df[lau_msa_df.series_id.str[-2:] == "03"]
+    lau_msa_df = lau_msa_df.rename(columns={"value": "local_area_unemployment_rate"})
+    # merge on area information
+    msa_area_df = area_df.assign(series_id=lambda x: x.series_id + "03")
+    lau_msa_df = lau_msa_df.merge(msa_area_df, on="series_id", how="left")
     lau_msa_df = lau_msa_df.drop(columns=["county_id_fips"])
     lau_msa_df = lau_msa_df.rename(columns={"area_text": "msa_name"})
 
-    # get county records
-    lau_non_msa_df = df[~df.county_id_fips.isnull()]
+    # now handle nonMSAs, first get county records
+    lau_non_msa_df = lau_df[lau_df.series_id.str[3:5] == "CN"]
+    # get the records that have a series_id ending in 06 (the labor force stats)
+    labor_force = lau_non_msa_df[lau_non_msa_df.series_id.str[-2:] == "06"][
+        ["series_id", "year", "value"]
+    ]
+    labor_force = labor_force.rename(columns={"value": "total_labor_force"})
+    # remake series_id to be mergeable with the unemployment numbers series ID
+    labor_force["series_id"] = labor_force["series_id"].str[:-2] + "04"
+    lau_non_msa_df = lau_non_msa_df[lau_non_msa_df.series_id.str[-2:] == "04"]
+    lau_non_msa_df = lau_non_msa_df.rename(columns={"value": "total_unemployment"})
+    lau_non_msa_df = lau_non_msa_df.merge(
+        labor_force, how="left", on=["series_id", "year"]
+    )
+    # merge on area information
+    non_msa_area_df = area_df.assign(series_id=lambda x: x.series_id + "04")
+    lau_non_msa_df = lau_non_msa_df.merge(non_msa_area_df, on="series_id", how="left")
     lau_non_msa_df = lau_non_msa_df.drop(columns=["msa_code"])
     # merge on nonMSA information for counties within nonMSAs
     lau_non_msa_df = lau_non_msa_df.merge(non_msa_df, how="inner", on="county_id_fips")
+
     return lau_msa_df, lau_non_msa_df
 
 

@@ -29,9 +29,9 @@ def extract(update: bool = True) -> pd.DataFrame:
     logger.info("Extracting EPA brownfields data.")
     data_dir = energy_comms.DATA_INPUTS / "epa"
     data_dir.mkdir(parents=True, exist_ok=True)
-    pickle_file_path = data_dir / (SOURCE_URL.split("/")[-1] + ".pkl.gz")
+    csv_file_path = data_dir / (SOURCE_URL.split("/")[-1] + ".csv.gz")
 
-    if not (pickle_file_path.exists()) or update:
+    if not (csv_file_path.exists()) or update:
         sites_sheet_name = "re-powering sites"
         sheet_idx = None
         # read in sheet
@@ -53,8 +53,8 @@ def extract(update: bool = True) -> pd.DataFrame:
                 f"The {sites_sheet_name} sheet is not present in the EPA spreadsheet."
             )
         # pickle dataframe so we don't need to read from excel every time
-        df.to_pickle(pickle_file_path, compression="gzip")
+        df.to_csv(csv_file_path, compression="gzip", index=False)
     else:
-        df = pd.read_pickle(pickle_file_path)
+        df = pd.read_csv(csv_file_path)
 
     return df

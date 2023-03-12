@@ -93,15 +93,19 @@ def make_plotly_map(geoms: pd.DataFrame, output_filename: str) -> None:
 
 
 def make_matplotlib_map(
-    geoms: pd.DataFrame, output_filename: str | None = None, only_conus: bool = False
+    geoms: pd.DataFrame,
+    color_column: str = "qualifying_criteria",
+    output_filename: str | None = None,
+    only_conus: bool = False,
 ) -> None:
     """Create matplotlib map of qualifying areas.
 
     Arguments:
         geoms (gpd.GeoDataFrame): Geodataframe with a geometry column
-            and primary_or_adj column indicating whether the geometry is a
-            primary geometry with a closed mine or plant or an adjacent geometry.
-            Likely the output of `create_geometries_df`.
+            and the ``color_column`` column indicating what color the geometry
+            should be.
+        color_column (str): The name of the column to use to color code the
+            geometries on the map.
         output_filename (str): path name to output the map to as an HTML
         only_conus (bool): if True, drop the AK, HI, PR state outline to make the
             CONUS easier to see
@@ -110,7 +114,7 @@ def make_matplotlib_map(
     if only_conus:
         state_geos_df = state_geos_df.drop([34, 7, 17])
     base = state_geos_df.plot(color="lightgrey", edgecolor="dimgrey")
-    geoms.plot(ax=base, column="primary_or_adj", legend=True)
+    geoms.plot(ax=base, column=color_column, legend=True)
     # set limits here because AK state outlines creates a really wide window
     if only_conus:
         plt.xlim([-130, -65])

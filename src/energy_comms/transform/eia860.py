@@ -38,7 +38,7 @@ def transform(
                 (df.energy_source_code_1.isin(COAL_CODES))
                 | (df.energy_source_code_2.isin(COAL_CODES))
             )
-            & (df.retirement_date >= "2010-01-01")
+            & (df.retirement_date >= pd.to_datetime("2010-01-01").date())
             & ~(df.longitude.isnull())
             & ~(df.latitude.isnull())
         )

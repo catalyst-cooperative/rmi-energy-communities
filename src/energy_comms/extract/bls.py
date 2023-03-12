@@ -68,7 +68,7 @@ def extract_national_unemployment_rates() -> pd.DataFrame:
                 "endyear": start_end_year_intervals[i][1],
             }
         )
-        resp = requests.post(BLS_API_URL, data=data, headers=headers)
+        resp = requests.post(BLS_API_URL, data=data, headers=headers, timeout=10)
         json_data = json.loads(resp.text)
         status = json_data["status"]
         if status != "REQUEST_SUCCEEDED":
@@ -97,7 +97,7 @@ def extract_lau_data(file_list: list[str] = [], update: bool = False) -> pd.Data
         file_path = data_dir / filename
         if not (file_path.exists()) or update:
             file_url = LAU_URL + filename
-            resp = requests.get(file_url)
+            resp = requests.get(file_url, timeout=10)
             if resp.status_code != 200:
                 raise HTTPError(
                     f"Bad response from BLS URL: {file_url}. Status code: {resp.status_code}"
@@ -142,7 +142,7 @@ def extract_msa_area_defs() -> pd.DataFrame:
 
     See https://www.bls.gov/oes/current/msa_def.htm for more details.
     """
-    resp = requests.get(MSA_URL)
+    resp = requests.get(MSA_URL, timeout=10)
     soup = BeautifulSoup(resp.text, "html.parser")
 
     excel_files = []
@@ -207,7 +207,7 @@ def download_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> N
         if not (file_path.exists()) or update:
             logger.info(f"Attempting download of {year} QCEW by area data.")
             file_url = f"{QCEW_URL}{year}/csv/{year}_annual_by_area.zip"
-            resp = requests.get(file_url)
+            resp = requests.get(file_url, timeout=10)
             if resp.status_code != 200:
                 if year != max(years):
                     raise HTTPError(

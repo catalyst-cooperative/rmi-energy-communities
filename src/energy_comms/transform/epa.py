@@ -32,6 +32,7 @@ def transform(
     df = df.astype(
         {"site_name": str, "state": str, "latitude": float, "longitude": float}
     )
+    df = df.rename(columns={"acreage_(acres)": "brownfield_acreage"})
     df.loc[:, "site_name"] = df["site_name"].str.strip().str.title()
     df = df.dropna(subset=["latitude", "longitude"])
     df = energy_comms.helpers.remove_invalid_lat_lon_records(df)

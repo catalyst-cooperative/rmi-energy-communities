@@ -8,6 +8,40 @@ import energy_comms
 logger = logging.getLogger(__name__)
 
 
+def get_brownfield_acreage_agg() -> pd.DataFrame:
+    """Get the total acreage of brownfields per county.
+
+    Returns:
+        A pandas dataframe with each record being the sum of brownfield
+        acreage in a county, with county FIPS as the index. The
+        ``brownfield_acreage`` column does not fill null values in the brownfields
+        acreage column. The ``brownfields_acreage_mean_fill`` and
+        ``brownfields_acreage_median_fill`` columns fill null values with
+        the mean and median of the acreage across all brownfields respectively.
+    """
+    epa_raw = energy_comms.extract.epa.extract(update=False)
+    epa_df = energy_comms.transform.epa.transform(epa_raw)
+    epa_df["brownfield_acreage_mean_fill"] = epa_df["brownfield_acreage"].fillna(
+        epa_df.brownfield_acreage.mean()
+    )
+    epa_df["brownfield_acreage_median_fill"] = epa_df["brownfield_acreage"].fillna(
+        epa_df.brownfield_acreage.median()
+    )
+    acreage = (
+        epa_df.groupby("county_id_fips")[
+            [
+                "brownfield_acreage",
+                "brownfield_acreage_mean_fill",
+                "brownfield_acreage_median_fill",
+            ]
+        ]
+        .sum()
+        .round(2)
+    )
+
+    return acreage
+
+
 def county_agg(df: pd.DataFrame) -> pd.DataFrame:
     """Aggregate all qualifying areas to get stats for each county.
 
@@ -16,7 +50,7 @@ def county_agg(df: pd.DataFrame) -> pd.DataFrame:
         brownfields criteria at the tract level. Likely the output of
         ``energy_comms.coordinate.get_all_qualifying_areas()``
     """
-    # get the number of brownfields
+    # get the number of brownfields and brownfield acreage per county
     out = (
         df[~(df.county_id_fips.isnull())]
         .drop_duplicates(subset=["county_id_fips"])
@@ -30,6 +64,9 @@ def county_agg(df: pd.DataFrame) -> pd.DataFrame:
         .to_frame()
     )
     out = out.merge(brownfield_nums, how="left", left_index=True, right_index=True)
+    brownfield_acreage = get_brownfield_acreage_agg()
+    out = out.merge(brownfield_acreage, how="left", left_index=True, right_index=True)
+
     # get the number of coal qualifying tracts
     coal_criterias = [
         "coalmine",

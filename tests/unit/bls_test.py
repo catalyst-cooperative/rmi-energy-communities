@@ -205,7 +205,7 @@ class TestEmploymentQualification:
         )
         county_df = pd.read_pickle(
             test_dir / "test_inputs/tx_al_census_counties_gdf.pkl.gz"
-        )
+        )  # nosec
         if self.fossil_output is None:
             logger.info(
                 "Fossil fuel qualifying areas dataframe isn't populated, running test_fossil_fuel_qualifier() to generate it."

@@ -35,7 +35,7 @@ setup(
     # In order for the dependabot to update versions, they must be listed here.
     # Use the format pkg_name>=x,<y", Included packages are just examples:
     install_requires=[
-        "beautifulsoup4>=4.11,<4.12",
+        "beautifulsoup4>=4.11,<4.13",
         "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
         "geopandas>=0.11,<0.13",
         "openpyxl>=3,!=3.1.1,<4",
@@ -72,7 +72,7 @@ setup(
             "mccabe>=0.6,<0.8",  # Checks that code isn't overly complicated
             "mypy>=0.942,<1.2",  # Static type checking
             "pep8-naming>=0.12,<0.14",  # Require PEP8 compliant variable names
-            "pre-commit>=2.9,<3.2",  # Allow us to run pre-commit hooks in testing
+            "pre-commit>=2.9,<3.3",  # Allow us to run pre-commit hooks in testing
             "pydocstyle>=5.1,<6.4",  # Style guidelines for Python documentation
             "pytest>=6.2,<7.3",  # Our testing framework
             "pytest-console-scripts>=1.1,<1.4",  # Allow automatic testing of scripts

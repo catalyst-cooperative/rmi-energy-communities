@@ -46,7 +46,9 @@ def test_geometry_intersections(test_dir: pathlib.Path) -> None:
         crs="EPSG:4269",
     )
 
-    census_gdf = pd.read_pickle(test_dir / "test_inputs/utah_census_tracts_gdf.pkl.gz")
+    census_gdf = pd.read_pickle(
+        test_dir / "test_inputs/utah_census_tracts_gdf.pkl.gz"
+    )  # nosec
 
     expected_gdf = geopandas.GeoDataFrame(
         [

@@ -43,7 +43,7 @@ jobs:
         run: |
           mkdir -p ~/pudl-work/sqlite/
           if [ ! -f ~/pudl-work/sqlite/pudl.sqlite ]
-          then curl -o ~/pudl-work/sqlite/pudl.sqlite https://data.catalyst.coop/pudl.db
+          then aws s3 cp s3://intake.catalyst.coop/dev/pudl.sqlite ./ --no-sign-request
           fi
           find ~/pudl-work/
 

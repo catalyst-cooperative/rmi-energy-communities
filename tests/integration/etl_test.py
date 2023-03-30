@@ -23,7 +23,8 @@ logger = logging.getLogger(__name__)
     ],
 )
 def test_pudl_engine(pudl_engine_fixture: dict[Any, Any], table_name: str) -> None:
-    """Test that the PUDL DB is actually available."""
+    """Get pudl_engine and do basic inspection."""
+    assert isinstance(pudl_engine_fixture, sa.engine.Engine)  # nosec: B101
     insp = sa.inspect(pudl_engine_fixture)
     if table_name not in insp.get_table_names():
         raise AssertionError(f"{table_name} not in PUDL DB.")

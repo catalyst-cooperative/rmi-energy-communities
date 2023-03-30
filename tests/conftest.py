@@ -40,7 +40,7 @@ def pudl_env(pudl_input_output_dirs: dict[Any, Any]) -> None:
 
 
 @pytest.fixture(scope="session")
-def pudl_input_output_dirs(pudl_output_tmpdir) -> dict[Any, Any]:  # noqa: C901
+def pudl_input_output_dirs(pudl_output_tmpdir) -> dict[Any, Any]:  # type: ignore
     """Determine where the PUDL input/output dirs should be."""
     input_override = None
     output_override = None
@@ -54,14 +54,14 @@ def pudl_input_output_dirs(pudl_output_tmpdir) -> dict[Any, Any]:  # noqa: C901
 
 
 @pytest.fixture(scope="session")
-def pudl_tmpdir(tmp_path_factory):  # noqa: C901
+def pudl_tmpdir(tmp_path_factory):  # type: ignore
     """Base temporary directory for all other tmp dirs."""
     tmpdir = tmp_path_factory.mktemp("pudl")
     return tmpdir
 
 
 @pytest.fixture(scope="session")
-def pudl_output_tmpdir(pudl_tmpdir):  # noqa: C901
+def pudl_output_tmpdir(pudl_tmpdir):  # type: ignore
     """Temporary directory for PUDL outputs."""
     tmpdir = pudl_tmpdir / "output"
     tmpdir.mkdir()
@@ -69,7 +69,7 @@ def pudl_output_tmpdir(pudl_tmpdir):  # noqa: C901
 
 
 @pytest.fixture(scope="session", name="pudl_settings_fixture")
-def pudl_settings_dict(request, pudl_input_output_dirs):  # noqa: C901
+def pudl_settings_dict(request, pudl_input_output_dirs):  # type: ignore
     """Determine some settings (mostly paths) for the test session."""
     logger.info("setting up the pudl_settings_fixture")
     pudl_settings = pudl.workspace.setup.get_defaults(**pudl_input_output_dirs)

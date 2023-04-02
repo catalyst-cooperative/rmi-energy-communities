@@ -31,48 +31,32 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 
 @pytest.fixture(scope="session")
-def pudl_env(pudl_input_output_dirs: dict[Any, Any]) -> None:
+def pudl_env(pudl_input_dir: dict[Any, Any]) -> None:
     """Set PUDL_OUTPUT/PUDL_INPUT/DAGSTER_HOME environment variables."""
-    pudl.workspace.setup.get_defaults(**pudl_input_output_dirs)
+    pudl.workspace.setup.get_defaults(**pudl_input_dir)
 
     logger.info(f"PUDL_OUTPUT path: {os.environ['PUDL_OUTPUT']}")
     logger.info(f"PUDL_INPUT path: {os.environ['PUDL_INPUT']}")
 
 
 @pytest.fixture(scope="session")
-def pudl_input_output_dirs(pudl_output_tmpdir) -> dict[Any, Any]:  # type: ignore
+def pudl_input_dir() -> dict[Any, Any]:
     """Determine where the PUDL input/output dirs should be."""
     input_override = None
-    output_override = None
 
+    # In CI we want a hard-coded path for input caching purposes:
     if os.environ.get("GITHUB_ACTIONS", False):
         # hard-code input dir for CI caching
-        input_override = Path(os.environ["HOME"]) / "pudl-work"
-        output_override = pudl_output_tmpdir
+        input_override = Path(os.environ["HOME"]) / "pudl-work/data"
 
-    return {"input_dir": input_override, "output_dir": output_override}
-
-
-@pytest.fixture(scope="session")
-def pudl_tmpdir(tmp_path_factory):  # type: ignore
-    """Base temporary directory for all other tmp dirs."""
-    tmpdir = tmp_path_factory.mktemp("pudl")
-    return tmpdir
-
-
-@pytest.fixture(scope="session")
-def pudl_output_tmpdir(pudl_tmpdir):  # type: ignore
-    """Temporary directory for PUDL outputs."""
-    tmpdir = pudl_tmpdir / "output"
-    tmpdir.mkdir()
-    return tmpdir
+    return {"input_dir": input_override}
 
 
 @pytest.fixture(scope="session", name="pudl_settings_fixture")
-def pudl_settings_dict(request, pudl_input_output_dirs):  # type: ignore
+def pudl_settings_dict(request, pudl_input_dir):  # type: ignore
     """Determine some settings (mostly paths) for the test session."""
     logger.info("setting up the pudl_settings_fixture")
-    pudl_settings = pudl.workspace.setup.get_defaults(**pudl_input_output_dirs)
+    pudl_settings = pudl.workspace.setup.get_defaults(**pudl_input_dir)
     pudl.workspace.setup.init(pudl_settings)
 
     pudl_settings["sandbox"] = request.config.getoption("--sandbox")

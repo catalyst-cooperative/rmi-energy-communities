@@ -10,7 +10,7 @@ dependencies:
 
   # Packages specified in setup.py that need or benefit from binary conda packages
   - geopandas>=0.11,<0.13
-  - pygeos>=0.11,<0.13 # Python wrappers for the GEOS spatial libraries
+  - pygeos>=0.11,<0.15 # Python wrappers for the GEOS spatial libraries
   # Visualization and data validation packages used interactively but not required.
   - plotly>=5.11,<5.12
   # - python-snappy>=0.6,<0.7  # Supports snappy compression in pyarrow/parquet

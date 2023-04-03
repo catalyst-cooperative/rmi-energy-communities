@@ -39,15 +39,15 @@ jobs:
       - name: Cache PUDL DB
         uses: actions/cache@v3.3.1
         with:
-          path: ~/pudl-work/data/pudl.sqlite
+          path: ~/pudl-work/output/pudl.sqlite
           # The last time we deployed Datasette. Update if we redeploy.
           key: "2022-05-05"
 
       - name: Download PUDL DB and log pre-test PUDL workspace contents
         run: |
-          mkdir -p ~/pudl-work/data/
-          if [ ! -f ~/pudl-work/data/pudl.sqlite ]
-          then curl -o ~/pudl-work/data/pudl.sqlite http://intake.catalyst.coop.s3.amazonaws.com/dev/pudl.sqlite
+          mkdir -p ~/pudl-work/output/
+          if [ ! -f ~/pudl-work/output/pudl.sqlite ]
+          then curl -o ~/pudl-work/output/pudl.sqlite http://intake.catalyst.coop.s3.amazonaws.com/dev/pudl.sqlite
           fi
           find ~/pudl-work/
 

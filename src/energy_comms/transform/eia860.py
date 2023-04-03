@@ -38,13 +38,13 @@ def transform(
                 (df.energy_source_code_1.isin(COAL_CODES))
                 | (df.energy_source_code_2.isin(COAL_CODES))
             )
-            & (df.retirement_date >= pd.to_datetime("2010-01-01").date())
+            & (df.generator_retirement_date >= pd.to_datetime("2010-01-01"))
             & ~(df.longitude.isnull())
             & ~(df.latitude.isnull())
         )
     else:
         mask = (
-            (df.planned_retirement_date > datetime.now())
+            (df.planned_generator_retirement_date > datetime.now())
             & (
                 (df.energy_source_code_1.isin(COAL_CODES))
                 | (df.energy_source_code_2.isin(COAL_CODES))

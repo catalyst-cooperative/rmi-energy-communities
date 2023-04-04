@@ -53,7 +53,7 @@ def pudl_input_dir() -> dict[Any, Any]:
 
 
 @pytest.fixture(scope="session", name="pudl_settings_fixture")
-def pudl_settings_dict(request, pudl_input_dir):  # type: ignore
+def pudl_settings_fixture(request, pudl_input_dir):  # type: ignore
     """Determine some settings (mostly paths) for the test session."""
     logger.info("setting up the pudl_settings_fixture")
     pudl_settings = pudl.workspace.setup.get_defaults(**pudl_input_dir)

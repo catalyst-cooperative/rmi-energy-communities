@@ -100,7 +100,7 @@ def extract_lau_data(file_list: list[str] = [], update: bool = False) -> pd.Data
             resp = requests.get(file_url, timeout=10)
             if resp.status_code != 200:
                 raise HTTPError(
-                    f"Bad response from BLS URL: {file_url}. Status code: {resp.status_code}"
+                    f"Bad response from BLS URL: {file_url} - Status code: {resp.status_code}"
                 )
             else:
                 with open(file_path, "wb") as file:
@@ -213,7 +213,7 @@ def download_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> N
             if resp.status_code != 200:
                 if year != max(years):
                     raise HTTPError(
-                        f"Bad response from BLS URL: {file_url}. Status code: {resp.status_code}"
+                        f"Bad response from BLS URL: {file_url} - Status code: {resp.status_code}"
                     )
                 else:
                     logger.warning(

@@ -73,7 +73,7 @@ def extract_national_unemployment_rates() -> pd.DataFrame:
         status = json_data["status"]
         if status != "REQUEST_SUCCEEDED":
             raise HTTPError(
-                f"Bad response from BLS API: {BLS_API_URL}. Got status {status}"
+                f"Bad response from BLS API: {BLS_API_URL} - Got status {status}"
             )
         for series in json_data["Results"]["series"]:
             series_df = pd.json_normalize(series["data"])

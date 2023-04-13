@@ -8,7 +8,8 @@ import pandas as pd
 import energy_comms
 
 # not including petcoke as coal generator
-COAL_CODES = ["ANT", "BIT", "LIG", "SUB", "SGC", "WC", "RC"]
+COAL_CODES = ["ANT", "BIT", "LIG", "RC", "SGC", "WC", "SUB"]
+COAL_TECHS = ["Conventional Steam Coal", "Coal Integrated Gasification Combined Cycle"]
 
 
 def transform(
@@ -31,24 +32,25 @@ def transform(
     """
     df = raw_df.copy()
     # apply filters for IRA criteria
+    coal_mask_2010_to_2013 = (
+        (df.report_date >= pd.to_datetime("2010-01-01"))
+        & (df.report_date < pd.to_datetime("2014-01-01"))
+        & (df.energy_source_code_1.isin(COAL_CODES))
+    )
+    coal_mask_2014_to_present = (df.report_date >= pd.to_datetime("2014-01-01")) & (
+        df.technology_description.isin(COAL_TECHS)
+    )
     if not get_proposed_retirements:
         mask = (
             (df.operational_status == "retired")
-            & (
-                (df.energy_source_code_1.isin(COAL_CODES))
-                | (df.energy_source_code_2.isin(COAL_CODES))
-            )
-            & (df.generator_retirement_date >= pd.to_datetime("2010-01-01"))
+            & (coal_mask_2010_to_2013 | coal_mask_2014_to_present)
             & ~(df.longitude.isnull())
             & ~(df.latitude.isnull())
         )
     else:
         mask = (
             (df.planned_generator_retirement_date > datetime.now())
-            & (
-                (df.energy_source_code_1.isin(COAL_CODES))
-                | (df.energy_source_code_2.isin(COAL_CODES))
-            )
+            & (coal_mask_2010_to_2013 | coal_mask_2014_to_present)
             & ~(df.longitude.isnull())
             & ~(df.latitude.isnull())
         )

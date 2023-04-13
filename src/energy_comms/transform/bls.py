@@ -5,7 +5,16 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-FOSSIL_NAICS_CODES = ["2121", "211", "213", "23712", "486", "4247", "22112"]
+FOSSIL_NAICS_CODES = [
+    "211",
+    "2121",
+    "213111",
+    "213112",
+    "213113",
+    "32411",
+    "4861",
+    "4862",
+]
 
 
 def transform_national_unemployment_rates(df: pd.DataFrame) -> pd.DataFrame:

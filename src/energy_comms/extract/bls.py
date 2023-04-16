@@ -41,6 +41,10 @@ QCEW_YEARS = list(np.arange(2010, date.today().year))
 
 QCEW_AREA_URL = "https://www.bls.gov/cew/classifications/areas/area-titles-csv.csv"
 
+BLS_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -93,14 +97,11 @@ def extract_lau_data(file_list: list[str] = [], update: bool = False) -> pd.Data
     df = pd.DataFrame()
     data_dir = energy_comms.DATA_INPUTS / "lau"
     data_dir.mkdir(parents=True, exist_ok=True)
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
-    }
     for filename in file_list:
         file_path = data_dir / filename
         if not (file_path.exists()) or update:
             file_url = LAU_URL + filename
-            resp = requests.get(file_url, headers=headers, timeout=10)
+            resp = requests.get(file_url, headers=BLS_HEADERS, timeout=10)
             if resp.status_code != 200:
                 raise HTTPError(
                     f"Bad response from BLS URL: {file_url}. Status code: {resp.status_code}"
@@ -147,7 +148,11 @@ def extract_nonmsa_area_defs() -> pd.DataFrame:
 
     See https://www.bls.gov/oes/current/msa_def.htm for more details.
     """
-    resp = requests.get(MSA_URL, timeout=10)
+    resp = requests.get(MSA_URL, headers=BLS_HEADERS, timeout=10)
+    if resp.status_code != 200:
+        raise HTTPError(
+            f"Bad response from BLS URL: {MSA_URL}. Status code: {resp.status_code}"
+        )
     soup = BeautifulSoup(resp.text, "html.parser")
 
     excel_files = []
@@ -163,7 +168,19 @@ def extract_nonmsa_area_defs() -> pd.DataFrame:
         file_url = excel_files[0]
     else:
         file_url = EXPECTED_MSA_FILENAME
-    df = pd.read_excel("https://www.bls.gov" + file_url)
+    excel_url = "https://www.bls.gov" + file_url
+    data_dir = energy_comms.DATA_INPUTS / "non-msa-areas"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    file_path = data_dir / excel_url.split("/")[-1]
+    resp = requests.get(excel_url, headers=BLS_HEADERS, timeout=10)
+    if resp.status_code != 200:
+        raise HTTPError(
+            f"Bad response extracting non-MSA area excel file: {excel_url}. Status code: {resp.status_code}"
+        )
+    else:
+        with open(file_path, "wb") as file:
+            file.write(resp.content)
+    df = pd.read_excel(file_path)
     return df
 
 

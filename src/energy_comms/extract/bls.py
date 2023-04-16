@@ -93,11 +93,14 @@ def extract_lau_data(file_list: list[str] = [], update: bool = False) -> pd.Data
     df = pd.DataFrame()
     data_dir = energy_comms.DATA_INPUTS / "lau"
     data_dir.mkdir(parents=True, exist_ok=True)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
+    }
     for filename in file_list:
         file_path = data_dir / filename
         if not (file_path.exists()) or update:
             file_url = LAU_URL + filename
-            resp = requests.get(file_url, timeout=10)
+            resp = requests.get(file_url, headers=headers, timeout=10)
             if resp.status_code != 200:
                 raise HTTPError(
                     f"Bad response from BLS URL: {file_url}. Status code: {resp.status_code}"

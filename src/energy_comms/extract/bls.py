@@ -169,18 +169,14 @@ def extract_nonmsa_area_defs() -> pd.DataFrame:
     else:
         file_url = EXPECTED_MSA_FILENAME
     excel_url = "https://www.bls.gov" + file_url
-    data_dir = energy_comms.DATA_INPUTS / "non-msa-areas"
-    data_dir.mkdir(parents=True, exist_ok=True)
-    file_path = data_dir / excel_url.split("/")[-1]
     resp = requests.get(excel_url, headers=BLS_HEADERS, timeout=10)
+    df = pd.DataFrame()
     if resp.status_code != 200:
         raise HTTPError(
             f"Bad response extracting non-MSA area excel file: {excel_url}. Status code: {resp.status_code}"
         )
     else:
-        with open(file_path, "wb") as file:
-            file.write(resp.content)
-    df = pd.read_excel(file_path)
+        df = pd.read_excel(io.BytesIO(resp.content))
     return df
 
 
@@ -191,10 +187,12 @@ def extract_msa_county_crosswalk() -> pd.DataFrame:
     counties with this crosswalk. Download CSV from
     https://www.bls.gov/cew/classifications/areas/county-msa-csa-crosswalk.htm
     """
-    df = pd.read_csv(
-        MSA_COUNTY_CROSSWALK_URL,
-        encoding="latin",
-    )
+    resp = requests.get(MSA_COUNTY_CROSSWALK_URL, headers=BLS_HEADERS, timeout=10)
+    if resp.status_code != 200:
+        raise HTTPError(
+            f"Bad response extracting msa to county crosswalk: {MSA_COUNTY_CROSSWALK_URL}. Status code: {resp.status_code}"
+        )
+    df = pd.read_csv(io.BytesIO(resp.content), encoding="latin")
     return df
 
 

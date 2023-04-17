@@ -1,13 +1,109 @@
 [build-system]
-requires = ["setuptools<62", "pip>=21,<23", "wheel", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools>=66,<68",
+    "setuptools_scm[toml]>=3.5.0",
+    "wheel",
+]
+
+[project]
+name = "catalystcoop.energy_comms"
+description = "Identify areas qualifying as energy communities as defined by the Inflation Reduction Act."
+readme = {file = "README.rst", content-type = "text/x-rst"}
+authors = [
+    {name = "Catalyst Cooperative", email = "pudl@catalyst.coop"}
+]
+requires-python = ">=3.11,<3.12"
+dynamic = ["version"]
+license = {file = "LICENSE.txt"}
+dependencies = [
+    "beautifulsoup4>=4.11,<4.13",
+    "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
+    "geopandas>=0.11,<0.13",
+    "openpyxl>=3,!=3.1.1,<4",
+    "pandas>=1.5,<2",
+    "plotly>=5.11,<5.15",
+    "pygeos>=0.11,<0.15",
+    "Shapely>1.8.0,<2.1",
+    "sqlalchemy>=1.4,<2",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+]
+keywords = []
+
+[project.urls]
+"Source" = "https://github.com/catalyst-cooperative/rmi-energy-communities"
+"Documentation" = "https://catalystcoop-rmi-energy-communities.readthedocs.io"
+"Issue Tracker" = "https://github.com/catalyst-cooperative/rmi-energy-communities/issues"
+
+[project.optional-dependencies]
+dev = [
+    "black>=22.0,<23.4",  # A deterministic code formatter
+    "isort>=5.0,<5.13",  # Standardized import sorting
+    "tox>=3.20,<4.5",  # Python test environment manager
+    "twine>=3.3,<4.1",  # Used to make releases to PyPI
+]
+docs = [
+    "doc8>=0.9,<1.2",  # Ensures clean documentation formatting
+    "furo>=2022.4.7",
+    "sphinx>=4,!=5.1.0,<6.1.4",  # The default Python documentation engine
+    "sphinx-autoapi>=1.8,<2.2",  # Generates documentation from docstrings
+    "sphinx-issues>=1.2,<3.1",  # Allows references to GitHub issues
+]
+tests = [
+    "bandit>=1.6,<1.8",  # Checks code for security issues
+    "coverage>=5.3,<7.3",  # Lets us track what code is being tested
+    "doc8>=0.9,<1.2",  # Ensures clean documentation formatting
+    "flake8>=4.0,<6.1",  # A framework for linting & static analysis
+    "flake8-builtins>=1.5,<2.2",  # Avoid shadowing Python built-in names
+    "flake8-colors>=0.1,<0.2",  # Produce colorful error / warning output
+    "flake8-docstrings>=1.5,<1.8",  # Ensure docstrings are formatted well
+    "flake8-rst-docstrings>=0.2,<0.4",  # Allow use of ReST in docstrings
+    "flake8-use-fstring>=1.0,<1.5",  # Highlight use of old-style string formatting
+    "mccabe>=0.6,<0.8",  # Checks that code isn't overly complicated
+    "mypy>=0.942,<1.3",  # Static type checking
+    "pep8-naming>=0.12,<0.14",  # Require PEP8 compliant variable names
+    "pre-commit>=2.9,<3.3",  # Allow us to run pre-commit hooks in testing
+    "pydocstyle>=5.1,<6.4",  # Style guidelines for Python documentation
+    "pytest>=6.2,<7.4",  # Our testing framework
+    "pytest-console-scripts>=1.1,<1.4",  # Allow automatic testing of scripts
+    "pytest-cov>=2.10,<4.1",  # Pytest plugin for working with coverage
+    "rstcheck[sphinx]>=5.0,<6.2",  # ReStructuredText linter
+    "tox>=3.20,<4.5",  # Python test environment manager
+]
+types = [
+    "types-setuptools",
+]
+
+[project.scripts]
+get_all_qualifying_areas = "energy_comms.cli:main"
+get_coal_qualifying_areas = "energy_comms.cli:coal_criteria"
+get_brownfields_qualifying_areas = "energy_comms.cli:brownfields_criteria"
+get_employment_qualifying_areas = "energy_comms.cli:employment_criteria"
+
 
 [tool.setuptools_scm]
 
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.black]
 line-length = 88
-target-version = ["py38", "py39", "py310", "py311"]
+target-version = ["py311"]
 include = "\\.pyi?$"
 
 [tool.isort]
 profile = "black"
-known_first_party = ["energy_comms", "pudl", "pudl_catalog"]
+known_first_party = ["ferc1_eia_match", "pudl", "pudl_catalog"]

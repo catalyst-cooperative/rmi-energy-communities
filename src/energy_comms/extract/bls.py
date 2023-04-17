@@ -41,6 +41,10 @@ QCEW_YEARS = list(np.arange(2010, date.today().year))
 
 QCEW_AREA_URL = "https://www.bls.gov/cew/classifications/areas/area-titles-csv.csv"
 
+BLS_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -97,7 +101,7 @@ def extract_lau_data(file_list: list[str] = [], update: bool = False) -> pd.Data
         file_path = data_dir / filename
         if not (file_path.exists()) or update:
             file_url = LAU_URL + filename
-            resp = requests.get(file_url, timeout=10)
+            resp = requests.get(file_url, headers=BLS_HEADERS, timeout=10)
             if resp.status_code != 200:
                 raise HTTPError(
                     f"Bad response from BLS URL: {file_url} - Status code: {resp.status_code}"
@@ -144,7 +148,11 @@ def extract_nonmsa_area_defs() -> pd.DataFrame:
 
     See https://www.bls.gov/oes/current/msa_def.htm for more details.
     """
-    resp = requests.get(MSA_URL, timeout=10)
+    resp = requests.get(MSA_URL, headers=BLS_HEADERS, timeout=10)
+    if resp.status_code != 200:
+        raise HTTPError(
+            f"Bad response from BLS URL: {MSA_URL}. Status code: {resp.status_code}"
+        )
     soup = BeautifulSoup(resp.text, "html.parser")
 
     excel_files = []
@@ -160,7 +168,15 @@ def extract_nonmsa_area_defs() -> pd.DataFrame:
         file_url = excel_files[0]
     else:
         file_url = EXPECTED_MSA_FILENAME
-    df = pd.read_excel("https://www.bls.gov" + file_url)
+    excel_url = "https://www.bls.gov" + file_url
+    resp = requests.get(excel_url, headers=BLS_HEADERS, timeout=10)
+    df = pd.DataFrame()
+    if resp.status_code != 200:
+        raise HTTPError(
+            f"Bad response extracting non-MSA area excel file: {excel_url}. Status code: {resp.status_code}"
+        )
+    else:
+        df = pd.read_excel(io.BytesIO(resp.content))
     return df
 
 
@@ -171,10 +187,12 @@ def extract_msa_county_crosswalk() -> pd.DataFrame:
     counties with this crosswalk. Download CSV from
     https://www.bls.gov/cew/classifications/areas/county-msa-csa-crosswalk.htm
     """
-    df = pd.read_csv(
-        MSA_COUNTY_CROSSWALK_URL,
-        encoding="latin",
-    )
+    resp = requests.get(MSA_COUNTY_CROSSWALK_URL, headers=BLS_HEADERS, timeout=10)
+    if resp.status_code != 200:
+        raise HTTPError(
+            f"Bad response extracting msa to county crosswalk: {MSA_COUNTY_CROSSWALK_URL}. Status code: {resp.status_code}"
+        )
+    df = pd.read_csv(io.BytesIO(resp.content), encoding="latin")
     return df
 
 

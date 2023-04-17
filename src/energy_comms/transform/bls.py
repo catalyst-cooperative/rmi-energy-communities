@@ -63,8 +63,8 @@ def transform_lau_areas(raw_df: pd.DataFrame) -> pd.DataFrame:
     """Transform local areas dataframe.
 
     Construct the BLS series ID for records that refer to a county
-    or metropolitan statistical area. Add state FIPS ID column and
-    and geo ID column. For more information on these BLS series IDs
+    or metropolitan statistical area. Add state FIPS ID column.
+    For more information on these BLS series IDs
     see https://www.bls.gov/help/hlpforma.htm#LA
 
     This table gives the area name for the LAU data.
@@ -167,11 +167,19 @@ def transform_local_area_unemployment_rates(
     return lau_msa_df, lau_non_msa_df
 
 
-def transform_nonmsa_area_defs(df: pd.DataFrame) -> pd.DataFrame:
+def transform_nonmsa_area_defs(
+    df: pd.DataFrame, msa_county_crosswalk: pd.DataFrame
+) -> pd.DataFrame:
     """Transform dataframe of non-MSA codes and names.
 
     Clean column names, enforce string types, pad FIPS codes with 0s,
-    filter for nonmetropolitan statistical areas.
+    filter for nonmetropolitan statistical areas. Drop counties that are
+    already in an MSA in the MSA to county crosswalk. Per Treasury/IRS
+    guidance, counties in non-MSAs can have no part in an MSA as well.
+
+    Args:
+        df: Raw dataframe of non-MSA codes and names.
+        msa_county_crosswalk: Transformed crosswalk from MSA to counties.
     """
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
     col_rename_dict = {
@@ -196,10 +204,14 @@ def transform_nonmsa_area_defs(df: pd.DataFrame) -> pd.DataFrame:
     df["county_id_fips"] = df["state_id_fips"] + df["county_id_fips"].str.zfill(3)
     df["township_id_fips"] = df["township_id_fips"].str.zfill(3)
 
+    counties_in_msas = msa_county_crosswalk.county_id_fips.unique()
+    df = df[~df.county_id_fips.isin(counties_in_msas)]
+
     # there are some New England counties where the county is split
     # between two different non-MSAs. However the QCEW data isn't finer
     # granularity than county, so for now, drop duplicate counties
     # to get one non-MSA per county
+    # TODO: keep the non-MSA that the majority of the county is part of
     df = df.drop_duplicates(subset="county_id_fips")
 
     return df
@@ -210,6 +222,7 @@ def transform_msa_county_crosswalk(df: pd.DataFrame) -> pd.DataFrame:
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
     df = df.rename(columns={"county_code": "county_id_fips"})
     df = df.astype(str)
+    df = df[df.msa_type == "Metro"]
     df["county_id_fips"] = df.county_id_fips.str.zfill(5)
     return df
 

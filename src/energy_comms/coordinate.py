@@ -88,7 +88,9 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
         msa_county_raw_df
     )
     non_msa_raw_df = energy_comms.extract.bls.extract_nonmsa_area_defs()
-    non_msa_df = energy_comms.transform.bls.transform_nonmsa_area_defs(non_msa_raw_df)
+    non_msa_df = energy_comms.transform.bls.transform_nonmsa_area_defs(
+        non_msa_raw_df, msa_to_county_df
+    )
     # do one year at a time so the concatenated dataframe isn't as big
     fossil_employment_df = pd.DataFrame()
     for year in QCEW_YEARS:

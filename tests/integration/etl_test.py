@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Literal
 
+import pandas as pd
 import pytest
 import sqlalchemy as sa
 
@@ -92,6 +93,24 @@ def test_epa_etl(pudl_settings_fixture: dict[Any, Any] | None) -> None:
         )
 
 
+def _get_statistical_area_delineation_dfs() -> pd.DataFrame:
+    msa_county_crosswalk = energy_comms.extract.bls.extract_msa_county_crosswalk()
+    if msa_county_crosswalk.empty:
+        raise AssertionError(
+            "MSA to county crosswalk extract returned empty dataframe."
+        )
+    msa_county_crosswalk = energy_comms.transform.bls.transform_msa_county_crosswalk(
+        msa_county_crosswalk
+    )
+    non_msa_df = energy_comms.extract.bls.extract_nonmsa_area_defs()
+    if non_msa_df.empty:
+        raise AssertionError("Non-MSA definition extract returned empty dataframe.")
+    non_msa_df = energy_comms.transform.bls.transform_nonmsa_area_defs(
+        non_msa_df, msa_county_crosswalk
+    )
+    return msa_county_crosswalk, non_msa_df
+
+
 def test_bls_etl() -> None:
     """Verify that we can ETL the BLS employment data."""
     # begin with unemployment criteria
@@ -119,21 +138,12 @@ def test_bls_etl() -> None:
             "Local unemployment data areas extract returned empty dataframe."
         )
     lau_area_df = energy_comms.transform.bls.transform_lau_areas(raw_df=raw_lau_area_df)
-    non_msa_df = energy_comms.extract.bls.extract_nonmsa_area_defs()
-    non_msa_df = energy_comms.transform.bls.transform_nonmsa_area_defs(non_msa_df)
+    msa_county_crosswalk, non_msa_df = _get_statistical_area_delineation_dfs()
     (
         lau_msa_df,
         lau_non_msa_df,
     ) = energy_comms.transform.bls.transform_local_area_unemployment_rates(
         raw_lau_df=raw_lau_df, area_df=lau_area_df, non_msa_df=non_msa_df
-    )
-    msa_county_crosswalk = energy_comms.extract.bls.extract_msa_county_crosswalk()
-    if msa_county_crosswalk.empty:
-        raise AssertionError(
-            "MSA to county crosswalk extract returned empty dataframe."
-        )
-    msa_county_crosswalk = energy_comms.transform.bls.transform_msa_county_crosswalk(
-        msa_county_crosswalk
     )
     unemployment_df = (
         energy_comms.generate_qualifying_areas.unemployment_rate_qualifying_areas(

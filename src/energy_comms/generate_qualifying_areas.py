@@ -11,9 +11,9 @@ import energy_comms
 
 logger = logging.getLogger(__name__)
 
-# in New England states the MSA codes don't map perfectly from LAU to QCEW
+# try to map some NECTA MSAs to appropriate MSA to go between LAU and QCEW
 LAU_TO_QCEW_MSA_CODE_CORRECTIONS = {
-    "C7195": "C1486",
+    "C7195": "C1486",  # Bridgeport-Stamford-Norwalk, CT Metropolitan NECTA to Bridgeport-Stamford-Norwalk, CT MSA
     "C7345": "C2554",
     "C7645": "C3598",
     "C7075": "C1262",
@@ -28,7 +28,7 @@ LAU_TO_QCEW_MSA_CODE_CORRECTIONS = {
     "C7720": "C3930",
     "C7240": "C1554",
     "C7570": "C3530",
-    "C7285": "C1486",
+    "C7285": "C1486",  # Danbury, CT Metropolitan NECTA to Bridgeport-Stamford-Norwalk, CT MSA
     "C7870": "C3530",
     "C7555": "C3930",
     "C7450": "C4934",

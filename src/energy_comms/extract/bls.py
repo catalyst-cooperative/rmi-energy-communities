@@ -77,7 +77,7 @@ def extract_national_unemployment_rates() -> pd.DataFrame:
         status = json_data["status"]
         if status != "REQUEST_SUCCEEDED":
             raise HTTPError(
-                f"Bad response from BLS API: {BLS_API_URL}. Got status {status}"
+                f"Bad response from BLS API: {BLS_API_URL} - Got status {status}"
             )
         for series in json_data["Results"]["series"]:
             series_df = pd.json_normalize(series["data"])
@@ -104,7 +104,7 @@ def extract_lau_data(file_list: list[str] = [], update: bool = False) -> pd.Data
             resp = requests.get(file_url, headers=BLS_HEADERS, timeout=10)
             if resp.status_code != 200:
                 raise HTTPError(
-                    f"Bad response from BLS URL: {file_url}. Status code: {resp.status_code}"
+                    f"Bad response from BLS URL: {file_url} - Status code: {resp.status_code}"
                 )
             else:
                 with open(file_path, "wb") as file:
@@ -231,7 +231,7 @@ def download_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> N
             if resp.status_code != 200:
                 if year != max(years):
                     raise HTTPError(
-                        f"Bad response from BLS URL: {file_url}. Status code: {resp.status_code}"
+                        f"Bad response from BLS URL: {file_url} - Status code: {resp.status_code}"
                     )
                 else:
                     logger.warning(

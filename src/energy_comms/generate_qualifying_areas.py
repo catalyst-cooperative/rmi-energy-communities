@@ -1,7 +1,6 @@
 """Combine the data sources to find qualifying areas."""
 
 import logging
-import math
 from typing import Any, Literal
 
 import numpy as np
@@ -139,9 +138,7 @@ def fossil_employment_qualifying_areas(
 
 def unemployment_rate_qualifying_areas(
     national_unemployment_df: pd.DataFrame,
-    lau_msa_df: pd.DataFrame,
-    lau_non_msa_county_df: pd.DataFrame,
-    msa_to_county: pd.DataFrame,
+    lau_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """Find qualifying areas that meet the unemployment rate criteria.
 
@@ -152,44 +149,15 @@ def unemployment_rate_qualifying_areas(
         national_unemployment_df: Transformed dataframe of national unemployment rates
             from the CPS data. The result of
             ``energy_comms.transform.bls.transform_national_unemployment_rates()``
-        lau_msa_df: Transformed dataframe of local area unemployment rates where each
-            record represents a metropolitan statistical area. The MSA dataframe returned
+        lau_df: Transformed dataframe of local area unemployment rates where each
+            record represents a county within an MSA or non-MSA. The dataframe returned
             from ``energy_comms.transform.bls.transform_local_area_unemployment_rates()``
-        lau_non_msa_county_df: Transformed dataframe of local area unemployment rates where
-            each record is a county within a nonmetropolitan statistical area. The nonMSA
-            dataframe returned from
-            ``energy_comms.transform.bls.transform_local_area_unemployment_rates()``
-        msa_to_county: Dataframe of the MSA to county crosswalk.
 
     Returns:
         Dataframe with column to indicate whether a county qualifies under this criteria.
     """
-    # fix MSA codes that are different in the QCEW MSA to county crosswalk
-    full_msa_df = lau_msa_df.replace({"msa_code": LAU_TO_QCEW_MSA_CODE_CORRECTIONS})
-    full_msa_df = full_msa_df.merge(msa_to_county, on="msa_code", how="left")
-
-    # now handle non MSA counties
-    non_msa_unemployment_rates = lau_non_msa_county_df.groupby(["msa_code", "year"])[
-        "total_unemployment", "total_labor_force"
-    ].sum()
-    non_msa_unemployment_rates["local_area_unemployment_rate"] = (
-        non_msa_unemployment_rates["total_unemployment"]
-        / non_msa_unemployment_rates["total_labor_force"]
-        # round down to three decimals and make percent, not simplifying expression for clarity
-    ).apply(lambda x: math.floor(x * 1000) / 1000) * 100
-    non_msa_unemployment_rates = non_msa_unemployment_rates.drop(
-        columns=["total_unemployment", "total_labor_force"]
-    )
-    full_non_msa_df = lau_non_msa_county_df.merge(
-        non_msa_unemployment_rates,
-        how="left",
-        left_on=["msa_code", "year"],
-        right_index=True,
-    )
-
-    full_df = pd.concat([full_msa_df, full_non_msa_df])
     # merge on the national unemployment rates
-    full_df = full_df.merge(
+    full_df = lau_df.merge(
         national_unemployment_df,
         left_on="year",
         right_on="applies_to_criteria_year",

@@ -17,12 +17,12 @@ class TestEmploymentQualification:
     functions in ``energy_comms.generate_qualifying_areas``.
     """
 
-    msa_to_county_df = None
-    fossil_output = None
-    unemployment_output = None
+    msa_to_county_df = pd.DataFrame()
+    fossil_output = pd.DataFrame()
+    unemployment_output = pd.DataFrame()
 
     def _get_msa_to_county_df(self, test_dir: pathlib.Path) -> pd.DataFrame:
-        if self.msa_to_county_df is None:
+        if self.msa_to_county_df.empty:
             self.msa_to_county_df = pd.read_csv(
                 test_dir / "test_inputs/msa_sample.csv", dtype={"county_id_fips": str}
             )
@@ -86,7 +86,7 @@ class TestEmploymentQualification:
         pd.testing.assert_frame_equal(fossil_expected, fossil_output_small)
 
     def test_unemployment_qualifier(self, test_dir: pathlib.Path) -> None:
-        """Test the unemployment rate qualifiying function."""
+        """Test the unemployment rate qualifying function."""
         national_unemployment_df = pd.DataFrame(
             {
                 "real_year": [2018, 2019],
@@ -94,81 +94,83 @@ class TestEmploymentQualification:
                 "applies_to_criteria_year": [2019, 2020],
             }
         )
-        lau_msa_df = pd.DataFrame(
+        lau_raw_df = pd.DataFrame(
             {
-                "series_id": ["LAUMT481018000000003"] * 2 + ["LAUMT044974000000003"],
-                "year": [2019, 2020, 2020],
-                "msa_name": ["Abilene, TX Metropolitan Statistical Area"] * 2
-                + ["Yuma, AZ Metropolitan Statistical Area"],
-                "local_area_unemployment_rate": [3.0, 5.6, 17.0],
-                "msa_code": ["C1018"] * 2 + ["C4974"],
-            }
-        )
-        lau_non_msa_df = pd.DataFrame(
-            {
-                "series_id": ["LAUCN010050000000003"] * 2
-                + ["LAUCN011090000000003"] * 2,
-                "year": [2019, 2020, 2019, 2020],
-                "msa_name": "Southeast Alabama nonmetropolitan area",
-                "msa_code": "100004",
-                "total_unemployment": [344.7, 675.9, 536.7, 864.8],
-                "total_labor_force": [8636.2, 8680.2, 15570.0, 15840.6],
-                "county_id_fips": ["01005"] * 2 + ["01109"] * 2,
-            }
-        )
-        unemployment_expected = pd.DataFrame(
-            {
-                "series_id": ["LAUMT481018000000003"] * 6
-                + ["LAUMT044974000000003"]
-                + ["LAUCN010050000000003"] * 2
-                + ["LAUCN011090000000003"] * 2,
-                "year": [
-                    2019,
-                    2019,
-                    2019,
-                    2020,
-                    2020,
-                    2020,
-                    2020,
-                    2019,
-                    2020,
-                    2019,
-                    2020,
+                "series_id": [
+                    "LAUCN480590000000004",
+                    "LAUCN480590000000004",
+                    "LAUCN480590000000006",
+                    "LAUCN480590000000006",
+                    "LAUCN480590000000004",
+                    "LAUCN480590000000004",
+                    "LAUCN480590000000006",
+                    "LAUCN480590000000006",
+                    "LAUCN010050000000004",
+                    "LAUCN010050000000004",
+                    "LAUCN010050000000006",
+                    "LAUCN010050000000006",
+                    "LAUCN011090000000004",
+                    "LAUCN011090000000004",
+                    "LAUCN011090000000006",
+                    "LAUCN011090000000006",
                 ],
-                "local_area_unemployment_rate": [
-                    3.0,
-                    3.0,
-                    3.0,
-                    5.6,
-                    5.6,
-                    5.6,
-                    17.0,
-                    3.6,
-                    6.2,
-                    3.6,
-                    6.2,
+                "year": [2019] * 4 + [2020] * 12,
+                "period": ["M01", "M02"] * 8,
+                "value": [
+                    100.0,
+                    150.0,
+                    3500,
+                    3600,
+                    500.0,
+                    448.0,
+                    2000.0,
+                    2500.0,
+                    344,
+                    675,
+                    8680,
+                    8636,
+                    500,
+                    864,
+                    15570,
+                    15800,
                 ],
-                "msa_name": ["Abilene, TX Metropolitan Statistical Area"] * 6
-                + ["Yuma, AZ Metropolitan Statistical Area"]
-                + ["Southeast Alabama nonmetropolitan area"] * 4,
-                "meets_unemployment_threshold": [0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1],
-                "county_id_fips": ["48059", "48253", "48441"] * 2
-                + ["04027"]
-                + ["01005"] * 2
-                + ["01109"] * 2,
-                "geoid": ["48059", "48253", "48441"] * 2
-                + ["04027"]
-                + ["01005"] * 2
-                + ["01109"] * 2,
             }
         )
+        msa_county_crosswalk = self._get_msa_to_county_df(test_dir)
+        non_msa_county_crosswalk = pd.read_csv(
+            test_dir / "test_inputs/non_msa_sample.csv",
+            dtype={"county_id_fips": str, "msa_code": str},
+        )
+        lau_expected = pd.DataFrame(
+            {
+                "county_id_fips": ["48059", "48059", "01005", "01109"],
+                "msa_code": ["C1018", "C1018", "100004", "100004"],
+                "msa_name": [
+                    "Abilene, TX",
+                    "Abilene, TX",
+                    "Southeast Alabama nonmetropolitan area",
+                    "Southeast Alabama nonmetropolitan area",
+                ],
+                "year": [2019, 2020, 2020, 2020],
+                "local_area_unemployment_rate": [3.5, 21.0, 4.8, 4.8],
+            }
+        ).astype({"year": "Int64"})
+
+        unemployment_expected = lau_expected.assign(
+            meets_unemployment_threshold=[0, 1, 1, 1]
+        )
+        lau_actual = energy_comms.transform.bls.transform_local_area_unemployment_rates(
+            raw_lau_df=lau_raw_df,
+            non_msa_county_crosswalk=non_msa_county_crosswalk,
+            msa_county_crosswalk=msa_county_crosswalk,
+        ).reset_index()
         self.unemployment_output = (
             energy_comms.generate_qualifying_areas.unemployment_rate_qualifying_areas(
-                national_unemployment_df=national_unemployment_df,
-                lau_msa_df=lau_msa_df,
-                lau_non_msa_county_df=lau_non_msa_df,
-                msa_to_county=self._get_msa_to_county_df(test_dir=test_dir),
+                national_unemployment_df=national_unemployment_df, lau_df=lau_actual
             )
+        )
+        pd.testing.assert_frame_equal(
+            lau_expected, lau_actual[list(lau_expected.columns)]
         )
         pd.testing.assert_frame_equal(
             unemployment_expected,
@@ -184,17 +186,15 @@ class TestEmploymentQualification:
             {
                 "county_name": [
                     "Callahan County",
-                    "Jones County",
-                    "Taylor County",
                     "Barbour County",
                     "Pike County",
                 ],
-                "county_id_fips": ["48059", "48253", "48441", "01005", "01109"],
-                "state_id_fips": ["48"] * 3 + ["01"] * 2,
-                "state_abbr": ["TX"] * 3 + ["AL"] * 2,
-                "state_name": ["Texas"] * 3 + ["Alabama"] * 2,
-                "geoid": ["48059", "48253", "48441", "01005", "01109"],
-                "site_name": ["Abilene, TX MSA"] * 3
+                "county_id_fips": ["48059", "01005", "01109"],
+                "state_id_fips": ["48"] + ["01"] * 2,
+                "state_abbr": ["TX"] + ["AL"] * 2,
+                "state_name": ["Texas"] + ["Alabama"] * 2,
+                "geoid": ["48059", "01005", "01109"],
+                "site_name": ["Abilene, TX MSA"]
                 + ["Southeast Alabama nonmetropolitan area"] * 2,
                 "qualifying_criteria": "fossil_fuel_employment",
                 "qualifying_area": "MSA or non-MSA",
@@ -206,24 +206,27 @@ class TestEmploymentQualification:
         county_df = pd.read_pickle(
             test_dir / "test_inputs/tx_al_census_counties_gdf.pkl.gz"
         )  # nosec
-        if self.fossil_output is None:
+        if self.fossil_output.empty:
             logger.info(
                 "Fossil fuel qualifying areas dataframe isn't populated, running test_fossil_fuel_qualifier() to generate it."
             )
             self.test_fossil_fuel_qualifier(test_dir=test_dir)
-        if self.unemployment_output is None:
+        if self.unemployment_output.empty:
             logger.info(
                 "Unemployment qualifying areas dataframe isn't populated, running test_unemployment_qualifier() to generate it."
             )
             self.test_unemployment_qualifier(test_dir=test_dir)
+        # currently testing fewer counties in unemployment test
+        county_id_fips_list = self.unemployment_output.county_id_fips.unique()
+        fossil_employment_df = self.fossil_output[
+            self.fossil_output.county_id_fips.isin(county_id_fips_list)
+        ]
         employment_output = (
             energy_comms.generate_qualifying_areas.employment_criteria_qualifying_areas(
-                fossil_employment_df=self.fossil_output,
+                fossil_employment_df=fossil_employment_df,
                 unemployment_df=self.unemployment_output,
                 census_county_df=county_df,
                 census_state_df=state_df,
             )
         )[list(employment_expected.columns)]
-        logger.info(employment_expected.columns)
-        logger.info(employment_output.columns)
         pd.testing.assert_frame_equal(employment_expected, employment_output)

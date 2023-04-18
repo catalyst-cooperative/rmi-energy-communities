@@ -1,4 +1,4 @@
-county_id_fips,county_title,msa_code,msa_title,msa_type,csa_code,csa_title
+county_id_fips,county_title,msa_code,msa_name,msa_type,csa_code,csa_title
 48059,"Callahan County, Texas",C1018,"Abilene, TX",Metro,nan,nan
 48253,"Jones County, Texas",C1018,"Abilene, TX",Metro,nan,nan
 48441,"Taylor County, Texas",C1018,"Abilene, TX",Metro,nan,nan

@@ -102,13 +102,17 @@ def _get_statistical_area_delineation_dfs() -> pd.DataFrame:
     msa_county_crosswalk = energy_comms.transform.bls.transform_msa_county_crosswalk(
         msa_county_crosswalk
     )
-    non_msa_df = energy_comms.extract.bls.extract_nonmsa_area_defs()
-    if non_msa_df.empty:
-        raise AssertionError("Non-MSA definition extract returned empty dataframe.")
-    non_msa_df = energy_comms.transform.bls.transform_nonmsa_area_defs(
-        non_msa_df, msa_county_crosswalk
+    non_msa_county_crosswalk_raw = (
+        energy_comms.extract.bls.extract_nonmsa_county_crosswalk()
     )
-    return msa_county_crosswalk, non_msa_df
+    if non_msa_county_crosswalk_raw.empty:
+        raise AssertionError("Non-MSA definition extract returned empty dataframe.")
+    non_msa_county_crosswalk = (
+        energy_comms.transform.bls.transform_nonmsa_county_crosswalk(
+            non_msa_county_crosswalk_raw, msa_county_crosswalk
+        )
+    )
+    return msa_county_crosswalk, non_msa_county_crosswalk
 
 
 def test_bls_etl() -> None:
@@ -132,25 +136,18 @@ def test_bls_etl() -> None:
         raise AssertionError(
             "Local unemployment data extract returned empty dataframe."
         )
-    raw_lau_area_df = energy_comms.extract.bls.extract_lau_area_table(update=True)
-    if raw_lau_area_df.empty:
-        raise AssertionError(
-            "Local unemployment data areas extract returned empty dataframe."
-        )
-    lau_area_df = energy_comms.transform.bls.transform_lau_areas(raw_df=raw_lau_area_df)
-    msa_county_crosswalk, non_msa_df = _get_statistical_area_delineation_dfs()
     (
-        lau_msa_df,
-        lau_non_msa_df,
-    ) = energy_comms.transform.bls.transform_local_area_unemployment_rates(
-        raw_lau_df=raw_lau_df, area_df=lau_area_df, non_msa_df=non_msa_df
+        msa_county_crosswalk,
+        non_msa_county_crosswalk,
+    ) = _get_statistical_area_delineation_dfs()
+    lau_df = energy_comms.transform.bls.transform_local_area_unemployment_rates(
+        raw_lau_df=raw_lau_df,
+        non_msa_county_crosswalk=non_msa_county_crosswalk,
+        msa_county_crosswalk=msa_county_crosswalk,
     )
     unemployment_df = (
         energy_comms.generate_qualifying_areas.unemployment_rate_qualifying_areas(
-            national_unemployment_df=nat_unemployment_df,
-            lau_msa_df=lau_msa_df,
-            lau_non_msa_county_df=lau_non_msa_df,
-            msa_to_county=msa_county_crosswalk,
+            national_unemployment_df=nat_unemployment_df, lau_df=lau_df
         )
     )
     if unemployment_df.empty:
@@ -166,7 +163,7 @@ def test_bls_etl() -> None:
     if qcew_df.empty:
         raise AssertionError(f"{year} QCEW data extract returned empty dataframe.")
     qcew_msa_df, qcew_non_msa_df = energy_comms.transform.bls.transform_qcew_data(
-        qcew_df, non_msa_df=non_msa_df
+        qcew_df, non_msa_county_crosswalk=non_msa_county_crosswalk
     )
     fossil_employment_df = (
         energy_comms.generate_qualifying_areas.fossil_employment_qualifying_areas(

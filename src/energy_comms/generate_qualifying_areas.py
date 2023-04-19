@@ -10,31 +10,6 @@ import energy_comms
 
 logger = logging.getLogger(__name__)
 
-# try to map some NECTA MSAs to appropriate MSA to go between LAU and QCEW
-LAU_TO_QCEW_MSA_CODE_CORRECTIONS = {
-    "C7195": "C1486",  # Bridgeport-Stamford-Norwalk, CT Metropolitan NECTA to Bridgeport-Stamford-Norwalk, CT MSA
-    "C7345": "C2554",
-    "C7645": "C3598",
-    "C7075": "C1262",
-    "C7465": "C3034",
-    "C7675": "C3886",
-    "C7090": "C1270",
-    "C7165": "C1446",
-    "C7660": "C3834",
-    "C7810": "C4414",
-    "C7960": "C4934",
-    "C7495": "C3170",
-    "C7720": "C3930",
-    "C7240": "C1554",
-    "C7570": "C3530",
-    "C7285": "C1486",  # Danbury, CT Metropolitan NECTA to Bridgeport-Stamford-Norwalk, CT MSA
-    "C7870": "C3530",
-    "C7555": "C3930",
-    "C7450": "C4934",
-    "C7305": "C1446",
-    "C7690": "C1446",
-}
-
 
 def _get_percentage_fossil_employees(df: pd.DataFrame) -> pd.DataFrame:
     total_employment_df = df[(df.industry_code == "10") & (df.own_code == 0)]

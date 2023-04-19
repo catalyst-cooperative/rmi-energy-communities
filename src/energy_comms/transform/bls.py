@@ -63,6 +63,9 @@ def transform_national_unemployment_rates(df: pd.DataFrame) -> pd.DataFrame:
 def transform_lau_areas(raw_df: pd.DataFrame) -> pd.DataFrame:
     """Transform local areas dataframe.
 
+    Note: this table is no longer needed. Keeping this function
+    in case the LAU area table provides helpful context later.
+
     Construct the BLS series ID for records that refer to a county
     or metropolitan statistical area. Add state FIPS ID column.
     For more information on these BLS series IDs

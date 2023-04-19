@@ -127,7 +127,11 @@ def extract_lau_rates(update: bool = False) -> pd.DataFrame:
 
 
 def extract_lau_area_table(update: bool = False) -> pd.DataFrame:
-    """Extract local area unemployment table of area codes and names."""
+    """Extract local area unemployment table of area codes and names.
+
+    Note: this table is no longer needed. Keeping this function
+    in case the LAU area table provides helpful context later.
+    """
     df = extract_lau_data(file_list=[LAU_AREA_FILENAME], update=update)
     return df
 

@@ -70,22 +70,26 @@ def combine_gen_and_mine_geoms(
     return full_df
 
 
-def make_plotly_map(geoms: pd.DataFrame, output_filename: str) -> None:
+def make_plotly_map(
+    geoms: pd.DataFrame,
+    output_filename: str,
+    color_column: str = "qualifying_criteria",
+    title: str = "Qualifying Areas",
+) -> None:
     """Create plotly map of qualifying areas.
 
     Arguments:
         geoms (gpd.GeoDataFrame): Geodataframe with a geometry column
-            and primary_or_adj column indicating whether the geometry is a
-            primary geometry with a closed mine or plant or an adjacent geometry.
-            Likely the output of `create_geometries_df`.
         output_filename (str): path name to output the map to as an HTML
+        color_column (str): The column to use as color for the map.
+        title (str): The title of the map.
     """
     fig = px.choropleth(
         geoms,
         geojson=geoms.geometry,
-        color="primary_or_adj",
+        color=color_column,
         locations=geoms.index,
-        title="Qualifying Areas",
+        title=title,
     )
 
     fig.update_geos(fitbounds="locations", scope="usa", showsubunits=True)

@@ -17,6 +17,8 @@ FOSSIL_NAICS_CODES = [
     "4862",
 ]
 
+# OLD_FOSSIL_NAICS_CODES = ["2121", "211", "213", "23712", "486", "4247", "22112"]
+
 
 def transform_national_unemployment_rates(df: pd.DataFrame) -> pd.DataFrame:
     """Clean the raw national unemployment rate data and get annual avg for each year.
@@ -298,7 +300,10 @@ def transform_qcew_data(
     )
     df["area_fips"] = df["area_fips"].str.zfill(5)
     # filter for records representing totals or fossil fuel industry records
-    df = df[df.industry_code.isin(["10"] + FOSSIL_NAICS_CODES)]
+    df = df[
+        df["industry_code"].isin(["10"] + FOSSIL_NAICS_CODES)
+        & (df["annual_avg_emplvl"] != 0)
+    ]
 
     # get the MSA records
     qcew_msa_df = df[df["area_title"].str.contains("MSA")]

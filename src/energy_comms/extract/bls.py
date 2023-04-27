@@ -33,7 +33,7 @@ MSA_URL = "https://www.bls.gov/oes/current/msa_def.htm"
 
 MSA_COUNTY_CROSSWALK_URL = "https://www.bls.gov/cew/classifications/areas/qcew-county-msa-csa-crosswalk-csv.csv"
 
-EXPECTED_MSA_FILENAME = "/oes/2021/may/area_definitions_m2021.xlsx"
+EXPECTED_MSA_FILENAME = "/oes/2022/may/area_definitions_m2022.xlsx"
 
 QCEW_URL = "https://data.bls.gov/cew/data/files/"
 
@@ -165,7 +165,7 @@ def extract_nonmsa_county_crosswalk() -> pd.DataFrame:
         raise AssertionError(f"No Excel files for MSA definitions found at {MSA_URL}")
     if EXPECTED_MSA_FILENAME not in excel_files:
         logger.warning(
-            f"The expected May 2021 MSA definitions filename was not found. \
+            f"The expected May 2022 MSA definitions filename was not found. \
             Using {excel_files[0]}. The old filename was likely replaced with new definitions."
         )
         file_url = excel_files[0]

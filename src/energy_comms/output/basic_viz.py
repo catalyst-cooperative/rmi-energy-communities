@@ -73,6 +73,7 @@ def combine_gen_and_mine_geoms(
 def make_plotly_map(
     geoms: pd.DataFrame,
     output_filename: str,
+    hover_data_columns: list[str] = [],
     color_column: str = "qualifying_criteria",
     title: str = "Qualifying Areas",
 ) -> None:
@@ -81,6 +82,8 @@ def make_plotly_map(
     Arguments:
         geoms (gpd.GeoDataFrame): Geodataframe with a geometry column
         output_filename (str): path name to output the map to as an HTML
+        hover_data_columns (list): A list of columns that should appear in
+            the hover data for the map.
         color_column (str): The column to use as color for the map.
         title (str): The title of the map.
     """
@@ -90,6 +93,7 @@ def make_plotly_map(
         color=color_column,
         locations=geoms.index,
         title=title,
+        hover_data=hover_data_columns,
     )
 
     fig.update_geos(fitbounds="locations", scope="usa", showsubunits=True)

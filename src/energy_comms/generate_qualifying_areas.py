@@ -22,12 +22,17 @@ def _get_percentage_fossil_employees(df: pd.DataFrame) -> pd.DataFrame:
         columns={"annual_avg_emplvl": "total_employees"}
     )
     # get data for fossil fuel employees in an area
+    # for the sake of the NAICS analysis, filter out records with 0 employment
     fossil_employment_df = df.loc[
         df["industry_code"].isin(energy_comms.transform.bls.FOSSIL_NAICS_CODES)
     ]
+    # rename column, useful for looking at what NAICS code record is from
+    fossil_employment_df = fossil_employment_df.rename(
+        columns={"industry_code": "naics_code"}
+    )
     fossil_employment_df = (
-        fossil_employment_df.groupby(["msa_code", "year"])["annual_avg_emplvl"]
-        .sum()
+        fossil_employment_df.groupby(["msa_code", "year"])
+        .agg({"annual_avg_emplvl": "sum", "naics_code": lambda x: list(set(x))})
         .reset_index()
     )
     fossil_employment_df = fossil_employment_df.rename(
@@ -44,8 +49,6 @@ def _get_percentage_fossil_employees(df: pd.DataFrame) -> pd.DataFrame:
             "Area found in fossil employment dataframe that's not in total employment dataframe."
         )
     full_df = full_df.fillna({"fossil_employees": 0})
-    # drop rows with no employees so we don't divide by 0
-    full_df = full_df[full_df.total_employees != 0]
     # Get percentage of fossil fuel employment
     full_df["percent_fossil_employment"] = (
         full_df.fossil_employees / full_df.total_employees
@@ -225,6 +228,7 @@ def employment_criteria_qualifying_areas(
         [
             "county_name",
             "county_id_fips",
+            # "naics_code",
             "state_id_fips",
             "state_abbr",
             "state_name",

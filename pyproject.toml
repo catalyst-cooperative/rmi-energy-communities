@@ -19,7 +19,7 @@ license = {file = "LICENSE.txt"}
 dependencies = [
     "beautifulsoup4>=4.11,<4.13",
     "catalystcoop-pudl @ git+https://github.com/catalyst-cooperative/pudl@dev",
-    "geopandas>=0.11,<0.13",
+    "geopandas>=0.11,<0.14",
     "openpyxl>=3,!=3.1.1,<4",
     "pandas>=1.5,<2",
     "plotly>=5.11,<5.15",

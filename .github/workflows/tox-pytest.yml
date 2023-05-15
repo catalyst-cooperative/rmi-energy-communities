@@ -16,8 +16,8 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Install conda environment using mamba
-        uses: mamba-org/provision-with-micromamba@v15
+      - name: Set up conda environment for testing
+        uses: conda-incubator/setup-miniconda@v2.2.0
         with:
           miniforge-variant: Mambaforge
           miniforge-version: latest

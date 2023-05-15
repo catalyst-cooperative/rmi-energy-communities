@@ -17,7 +17,7 @@ FOSSIL_NAICS_CODES = [
     "4862",
 ]
 
-# OLD_FOSSIL_NAICS_CODES = ["2121", "211", "213", "23712", "486", "4247", "22112"]
+OLD_FOSSIL_NAICS_CODES = ["2121", "211", "213", "23712", "486", "4247", "22112"]
 
 
 def transform_national_unemployment_rates(df: pd.DataFrame) -> pd.DataFrame:

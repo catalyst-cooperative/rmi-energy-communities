@@ -72,7 +72,7 @@ def extract_national_unemployment_rates() -> pd.DataFrame:
                 "endyear": start_end_year_intervals[i][1],
             }
         )
-        resp = requests.post(BLS_API_URL, data=data, headers=headers, timeout=10)
+        resp = requests.post(BLS_API_URL, data=data, headers=headers, timeout=20)
         json_data = json.loads(resp.text)
         status = json_data["status"]
         if status != "REQUEST_SUCCEEDED":
@@ -101,7 +101,7 @@ def extract_lau_data(file_list: list[str] = [], update: bool = False) -> pd.Data
         file_path = data_dir / filename
         if not (file_path.exists()) or update:
             file_url = LAU_URL + filename
-            resp = requests.get(file_url, headers=BLS_HEADERS, timeout=10)
+            resp = requests.get(file_url, headers=BLS_HEADERS, timeout=20)
             if resp.status_code != 200:
                 raise HTTPError(
                     f"Bad response from BLS URL: {file_url} - Status code: {resp.status_code}"
@@ -151,7 +151,7 @@ def extract_nonmsa_county_crosswalk() -> pd.DataFrame:
 
     See https://www.bls.gov/oes/current/msa_def.htm for more details.
     """
-    resp = requests.get(MSA_URL, headers=BLS_HEADERS, timeout=10)
+    resp = requests.get(MSA_URL, headers=BLS_HEADERS, timeout=20)
     if resp.status_code != 200:
         raise HTTPError(
             f"Bad response from BLS URL: {MSA_URL}. Status code: {resp.status_code}"
@@ -172,7 +172,7 @@ def extract_nonmsa_county_crosswalk() -> pd.DataFrame:
     else:
         file_url = EXPECTED_MSA_FILENAME
     excel_url = "https://www.bls.gov" + file_url
-    resp = requests.get(excel_url, headers=BLS_HEADERS, timeout=10)
+    resp = requests.get(excel_url, headers=BLS_HEADERS, timeout=20)
     df = pd.DataFrame()
     if resp.status_code != 200:
         raise HTTPError(
@@ -190,7 +190,7 @@ def extract_msa_county_crosswalk() -> pd.DataFrame:
     counties with this crosswalk. Download CSV from
     https://www.bls.gov/cew/classifications/areas/county-msa-csa-crosswalk.htm
     """
-    resp = requests.get(MSA_COUNTY_CROSSWALK_URL, headers=BLS_HEADERS, timeout=10)
+    resp = requests.get(MSA_COUNTY_CROSSWALK_URL, headers=BLS_HEADERS, timeout=20)
     if resp.status_code != 200:
         raise HTTPError(
             f"Bad response extracting msa to county crosswalk: {MSA_COUNTY_CROSSWALK_URL}. Status code: {resp.status_code}"
@@ -230,7 +230,7 @@ def download_qcew_data(years: list[int] = QCEW_YEARS, update: bool = False) -> N
         if not (file_path.exists()) or update:
             logger.info(f"Attempting download of {year} QCEW by area data.")
             file_url = f"{QCEW_URL}{year}/csv/{year}_annual_by_area.zip"
-            resp = requests.get(file_url, timeout=10)
+            resp = requests.get(file_url, timeout=20)
             if resp.status_code != 200:
                 if year != max(years):
                     raise HTTPError(

@@ -61,9 +61,7 @@ def _get_percentage_fossil_employees(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def fossil_employment_qualifying_areas(
-    qcew_msa_df: pd.DataFrame,
-    qcew_non_msa_county_df: pd.DataFrame,
-    msa_to_county: pd.DataFrame,
+    qcew_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """Find qualifying areas that meet the employment criteria.
 
@@ -77,41 +75,21 @@ def fossil_employment_qualifying_areas(
     a dataset of comprehensive tax revenues at a national level.
 
     Args:
-        qcew_msa_df: Dataframe of the transformed QCEW data containing
-            a record for each MSA.
-        qcew_non_msa_county_df: Dataframe of the transformed QCEW data with a
-            record for each county within a nonMSA.
-        msa_to_county: Dataframe of the MSA to county crosswalk.
+        qcew_df: Dataframe of the transformed QCEW data containing
+            a record for the counties within MSAs and non-MSAs giving the
+            employment statistics for each NAICS code and ownership code.
 
     Returns:
         Dataframe with column to indicate whether a county qualifies under this criteria.
     """
-    # first handle MSAs
-    qual_msa_df = _get_percentage_fossil_employees(qcew_msa_df)
-    # merge in state, county, and MSA name information
-    # and create a record for each county in an MSA
-    # join MSA area_title back on from the QCEW dataframe
-    qual_msa_df = qual_msa_df.merge(
-        qcew_msa_df[["msa_code", "area_title"]].drop_duplicates(),
-        how="left",
-        on=["msa_code"],
-    )
-    qual_msa_county_df = qual_msa_df.merge(msa_to_county, on="msa_code", how="left")
-
-    # now handle nonMSAs
-    qual_non_msa_df = _get_percentage_fossil_employees(qcew_non_msa_county_df)
-    qual_non_msa_county_df = qcew_non_msa_county_df.drop_duplicates(
-        subset=["msa_code", "county_id_fips", "year"]
-    ).merge(
-        qual_non_msa_df,
-        how="left",
-        on=["msa_code", "year"],
+    qual_df = _get_percentage_fossil_employees(qcew_df)
+    df = qcew_df.drop_duplicates(subset=["msa_code", "county_id_fips", "year"]).merge(
+        qual_df, how="left", on=["msa_code", "year"]
     )
 
-    full_df = pd.concat([qual_msa_county_df, qual_non_msa_county_df])
-    full_df["geoid"] = full_df["county_id_fips"]
+    df["geoid"] = df["county_id_fips"]
 
-    return full_df
+    return df
 
 
 def unemployment_rate_qualifying_areas(

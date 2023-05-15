@@ -132,7 +132,7 @@ def transform_local_area_unemployment_rates(
     )
     # filter out M13 (annual average) values
     lau_df = lau_df[(lau_df.period >= "M01") & (lau_df.period <= "M12")]
-    # filter for just MSAs and counties
+    # filter for just counties
     lau_df = lau_df[lau_df.series_id.str[3:5].isin(["CN"])]
     # get the unemployment total (04) and labor force total (06) stats
     lau_df = lau_df[lau_df.series_id.str[-2:].isin(["04", "06"])]
@@ -265,7 +265,10 @@ def transform_msa_county_crosswalk(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def transform_qcew_data(
-    df: pd.DataFrame, non_msa_county_crosswalk: pd.DataFrame
+    df: pd.DataFrame,
+    msa_county_crosswalk: pd.DataFrame,
+    non_msa_county_crosswalk: pd.DataFrame,
+    fossil_naics_codes: list[str] = FOSSIL_NAICS_CODES,
 ) -> pd.DataFrame:
     """Transform the QCEW data.
 
@@ -280,14 +283,17 @@ def transform_qcew_data(
     Args:
         df: Dataframe of raw QCEW data containing records for MSAs as well
             as records for counties.
+        msa_county_crosswalk: A dataframe of all counties within MSAs.
         non_msa_county_crosswalk: A dataframe of all counties within nonmetropolitan
             statistical areas.
+        fossil_naics_codes: A list of fossil NAICS codes to include records from. Used
+            for comparing results from different groupings of NAICS codes. Default is
+            FOSSIL_NAICS_CODES.
 
     Returns:
-        qcew_msa_df: QCEW data with a record for each metropolitan statistical
-            area.
-        qcew_non_msa_df: QCEW data with a record for each county within
-            a nonmetropolitan statistical area.
+        full_df: Dataframe of the transformed QCEW data containing
+            a record for the counties within MSAs and non-MSAs giving the
+            employment statistics for each NAICS code and ownership code.
     """
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
     df = df.astype(
@@ -301,38 +307,47 @@ def transform_qcew_data(
     df["area_fips"] = df["area_fips"].str.zfill(5)
     # filter for records representing totals or fossil fuel industry records
     df = df[
-        df["industry_code"].isin(["10"] + FOSSIL_NAICS_CODES)
+        df["industry_code"].isin(["10"] + fossil_naics_codes)
         & (df["annual_avg_emplvl"] != 0)
     ]
 
-    # get the MSA records
-    qcew_msa_df = df[df["area_title"].str.contains("MSA")]
-    qcew_msa_df = qcew_msa_df.rename(columns={"area_fips": "msa_code"})
-    msa_cols = [
-        "msa_code",
-        "area_title",
-        "year",
-        "industry_code",
-        "own_code",
-        "annual_avg_emplvl",
-    ]
-    qcew_msa_df = qcew_msa_df[msa_cols]
-
-    # get the county records
-    qcew_non_msa_df = df[~(df["area_title"].str.contains("MSA"))]
+    # get just the county records
+    df = df[~(df["area_title"].str.contains("MSA|CSA", regex=True))]
+    df = df.rename(columns={"area_fips": "county_id_fips"})
+    # merge on MSA information
+    msa_df = df.merge(
+        msa_county_crosswalk,
+        how="inner",
+        on="county_id_fips",
+    )
     # merge on non MSA information
-    qcew_non_msa_df = qcew_non_msa_df.merge(
+    non_msa_df = df.merge(
         non_msa_county_crosswalk,
         how="inner",
-        left_on="area_fips",
-        right_on="county_id_fips",
+        on="county_id_fips",
     )
+    full_df = pd.concat([msa_df, non_msa_df])
+    county_len_diff = len(df.county_id_fips.unique()) - len(
+        full_df.county_id_fips.unique()
+    )
+    if county_len_diff > 10:
+        logger.warning(
+            f"There are {county_len_diff} counties in the QCEW data that are not part of the MSA or non-MSA crosswalk."
+        )
     # rename to standardize columns
-    qcew_non_msa_df = qcew_non_msa_df.rename(
-        columns={"area_title": "county_title", "msa_name": "area_title"}
+    full_df = full_df.drop(columns=["area_title"]).rename(
+        columns={"msa_name": "area_title"}
     )
+    full_df = full_df[
+        [
+            "msa_code",
+            "county_id_fips",
+            "area_title",
+            "year",
+            "industry_code",
+            "own_code",
+            "annual_avg_emplvl",
+        ]
+    ]
 
-    non_msa_cols = msa_cols + ["county_id_fips"]
-    qcew_non_msa_df = qcew_non_msa_df[non_msa_cols]
-
-    return qcew_msa_df, qcew_non_msa_df
+    return full_df

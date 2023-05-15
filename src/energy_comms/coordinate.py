@@ -99,14 +99,14 @@ def get_employment_criteria_qualifying_areas(update: bool = False) -> pd.DataFra
         year_df = energy_comms.extract.bls.extract_qcew_data(years=[year])
         if year_df.empty:
             continue
-        year_msa_df, year_nonmsa_df = energy_comms.transform.bls.transform_qcew_data(
-            year_df, non_msa_county_crosswalk=non_msa_to_county_df
+        year_df = energy_comms.transform.bls.transform_qcew_data(
+            year_df,
+            msa_county_crosswalk=msa_to_county_df,
+            non_msa_county_crosswalk=non_msa_to_county_df,
         )
         year_df = (
             energy_comms.generate_qualifying_areas.fossil_employment_qualifying_areas(
-                qcew_msa_df=year_msa_df,
-                qcew_non_msa_county_df=year_nonmsa_df,
-                msa_to_county=msa_to_county_df,
+                qcew_df=year_df
             )
         )
         fossil_employment_df = pd.concat([fossil_employment_df, year_df])

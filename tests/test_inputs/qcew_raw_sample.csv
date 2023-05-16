@@ -1,0 +1,28 @@
+area_fips,area_title,year,industry_code,own_code,annual_avg_emplvl
+48059,"Callahan County, Texas",2012,10,0,30000
+48253,"Jones County, Texas",2012,10,0,6000
+48441,"Taylor County, Texas",2012,10,0,30000
+48059,"Callahan County, Texas",2012,211,5,10
+48441,"Taylor County, Texas",2012,213111,5,100
+48441,"Taylor County, Texas",2012,213112,5,0
+48253,"Jones County, Texas",2012,4861,5,0
+48059,"Callahan County, Texas",2020,10,0,60000
+48253,"Abilene, TX",2020,10,0,7000
+48441,"Taylor County, Texas",2020,10,0,929
+48441,"Taylor County, Texas",2020,211,5,193
+48059,"Callahan County, Texas",2020,213111,5,683
+48253,"Jones County, Texas",2020,213112,5,0
+48253,"Jones County, Texas",2020,4861,5,0
+48059,"Callahan County, Texas",2020,4862,5,344
+48253,"Jones County, Texas",2020,32411,5,0
+4027,"Yuma County, Arizona",2020,10,0,65963
+4027,"Yuma County, Arizona",2020,213111,5,0
+4027,"Yuma County, Arizona",2020,4862,5,62
+4027,"Yuma County, Arizona",2020,32411,5,0
+01005,"Barbour County, Alabama",2020,10,0,7935
+01005,"Barbour County, Alabama",2020,211,5,800
+01109,"Barbour County, Alabama",2020,10,0,14334
+01109,"Barbour County, Alabama",2020,2121,5,900
+09005,"Litchfield County, Connecticut",2020,10,0,56898
+09015,"Windham County, Connecticut",2020,10,0,35915
+09015,"Windham County, Connecticut",2020,211,0,100

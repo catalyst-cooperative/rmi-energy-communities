@@ -251,6 +251,8 @@ def add_area_info(
         "county": {"geoid10": "county_id_fips", "namelsad10": "county_name"},
     }
     if add_state:
+        # since we're merging we don't want to add duplicate columns
+        df.drop(columns=["state_name", "state_abbr"], errors="ignore", inplace=True)
         if "state_id_fips" not in df.columns:
             df["state_id_fips"] = df[fips_col].str[:2]
         if state_df is None:
@@ -261,6 +263,7 @@ def add_area_info(
             state_df[list(col_names["state"].values())], how="left", on="state_id_fips"
         )
     if add_county:
+        df.drop(columns=["county_name"], errors="ignore", inplace=True)
         if "county_id_fips" not in df.columns:
             df["county_id_fips"] = df[fips_col].str[:5]
         if county_df is None:

@@ -1,7 +1,6 @@
 """Combine the data sources to find qualifying areas."""
 
 import logging
-import math
 from typing import Any, Literal
 
 import numpy as np
@@ -10,31 +9,6 @@ import pandas as pd
 import energy_comms
 
 logger = logging.getLogger(__name__)
-
-# in New England states the MSA codes don't map perfectly from LAU to QCEW
-LAU_TO_QCEW_MSA_CODE_CORRECTIONS = {
-    "C7195": "C1486",
-    "C7345": "C2554",
-    "C7645": "C3598",
-    "C7075": "C1262",
-    "C7465": "C3034",
-    "C7675": "C3886",
-    "C7090": "C1270",
-    "C7165": "C1446",
-    "C7660": "C3834",
-    "C7810": "C4414",
-    "C7960": "C4934",
-    "C7495": "C3170",
-    "C7720": "C3930",
-    "C7240": "C1554",
-    "C7570": "C3530",
-    "C7285": "C1486",
-    "C7870": "C3530",
-    "C7555": "C3930",
-    "C7450": "C4934",
-    "C7305": "C1446",
-    "C7690": "C1446",
-}
 
 
 def _get_percentage_fossil_employees(df: pd.DataFrame) -> pd.DataFrame:
@@ -48,12 +22,17 @@ def _get_percentage_fossil_employees(df: pd.DataFrame) -> pd.DataFrame:
         columns={"annual_avg_emplvl": "total_employees"}
     )
     # get data for fossil fuel employees in an area
+    # for the sake of the NAICS analysis, filter out records with 0 employment
     fossil_employment_df = df.loc[
         df["industry_code"].isin(energy_comms.transform.bls.FOSSIL_NAICS_CODES)
     ]
+    # rename column, useful for looking at what NAICS code record is from
+    fossil_employment_df = fossil_employment_df.rename(
+        columns={"industry_code": "naics_code"}
+    )
     fossil_employment_df = (
-        fossil_employment_df.groupby(["msa_code", "year"])["annual_avg_emplvl"]
-        .sum()
+        fossil_employment_df.groupby(["msa_code", "year"])
+        .agg({"annual_avg_emplvl": "sum", "naics_code": lambda x: list(set(x))})
         .reset_index()
     )
     fossil_employment_df = fossil_employment_df.rename(
@@ -70,8 +49,6 @@ def _get_percentage_fossil_employees(df: pd.DataFrame) -> pd.DataFrame:
             "Area found in fossil employment dataframe that's not in total employment dataframe."
         )
     full_df = full_df.fillna({"fossil_employees": 0})
-    # drop rows with no employees so we don't divide by 0
-    full_df = full_df[full_df.total_employees != 0]
     # Get percentage of fossil fuel employment
     full_df["percent_fossil_employment"] = (
         full_df.fossil_employees / full_df.total_employees
@@ -84,9 +61,7 @@ def _get_percentage_fossil_employees(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def fossil_employment_qualifying_areas(
-    qcew_msa_df: pd.DataFrame,
-    qcew_non_msa_county_df: pd.DataFrame,
-    msa_to_county: pd.DataFrame,
+    qcew_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """Find qualifying areas that meet the employment criteria.
 
@@ -100,48 +75,26 @@ def fossil_employment_qualifying_areas(
     a dataset of comprehensive tax revenues at a national level.
 
     Args:
-        qcew_msa_df: Dataframe of the transformed QCEW data containing
-            a record for each MSA.
-        qcew_non_msa_county_df: Dataframe of the transformed QCEW data with a
-            record for each county within a nonMSA.
-        msa_to_county: Dataframe of the MSA to county crosswalk.
+        qcew_df: Dataframe of the transformed QCEW data containing
+            a record for the counties within MSAs and non-MSAs giving the
+            employment statistics for each NAICS code and ownership code.
 
     Returns:
         Dataframe with column to indicate whether a county qualifies under this criteria.
     """
-    # first handle MSAs
-    qual_msa_df = _get_percentage_fossil_employees(qcew_msa_df)
-    # merge in state, county, and MSA name information
-    # and create a record for each county in an MSA
-    # join MSA area_title back on from the QCEW dataframe
-    qual_msa_df = qual_msa_df.merge(
-        qcew_msa_df[["msa_code", "area_title"]].drop_duplicates(),
-        how="left",
-        on=["msa_code"],
-    )
-    qual_msa_county_df = qual_msa_df.merge(msa_to_county, on="msa_code", how="left")
-
-    # now handle nonMSAs
-    qual_non_msa_df = _get_percentage_fossil_employees(qcew_non_msa_county_df)
-    qual_non_msa_county_df = qcew_non_msa_county_df.drop_duplicates(
-        subset=["msa_code", "county_id_fips", "year"]
-    ).merge(
-        qual_non_msa_df,
-        how="left",
-        on=["msa_code", "year"],
+    qual_df = _get_percentage_fossil_employees(qcew_df)
+    df = qcew_df.drop_duplicates(subset=["msa_code", "county_id_fips", "year"]).merge(
+        qual_df, how="left", on=["msa_code", "year"]
     )
 
-    full_df = pd.concat([qual_msa_county_df, qual_non_msa_county_df])
-    full_df["geoid"] = full_df["county_id_fips"]
+    df["geoid"] = df["county_id_fips"]
 
-    return full_df
+    return df
 
 
 def unemployment_rate_qualifying_areas(
     national_unemployment_df: pd.DataFrame,
-    lau_msa_df: pd.DataFrame,
-    lau_non_msa_county_df: pd.DataFrame,
-    msa_to_county: pd.DataFrame,
+    lau_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """Find qualifying areas that meet the unemployment rate criteria.
 
@@ -152,44 +105,15 @@ def unemployment_rate_qualifying_areas(
         national_unemployment_df: Transformed dataframe of national unemployment rates
             from the CPS data. The result of
             ``energy_comms.transform.bls.transform_national_unemployment_rates()``
-        lau_msa_df: Transformed dataframe of local area unemployment rates where each
-            record represents a metropolitan statistical area. The MSA dataframe returned
+        lau_df: Transformed dataframe of local area unemployment rates where each
+            record represents a county within an MSA or non-MSA. The dataframe returned
             from ``energy_comms.transform.bls.transform_local_area_unemployment_rates()``
-        lau_non_msa_county_df: Transformed dataframe of local area unemployment rates where
-            each record is a county within a nonmetropolitan statistical area. The nonMSA
-            dataframe returned from
-            ``energy_comms.transform.bls.transform_local_area_unemployment_rates()``
-        msa_to_county: Dataframe of the MSA to county crosswalk.
 
     Returns:
         Dataframe with column to indicate whether a county qualifies under this criteria.
     """
-    # fix MSA codes that are different in the QCEW MSA to county crosswalk
-    full_msa_df = lau_msa_df.replace({"msa_code": LAU_TO_QCEW_MSA_CODE_CORRECTIONS})
-    full_msa_df = full_msa_df.merge(msa_to_county, on="msa_code", how="left")
-
-    # now handle non MSA counties
-    non_msa_unemployment_rates = lau_non_msa_county_df.groupby(["msa_code", "year"])[
-        "total_unemployment", "total_labor_force"
-    ].sum()
-    non_msa_unemployment_rates["local_area_unemployment_rate"] = (
-        non_msa_unemployment_rates["total_unemployment"]
-        / non_msa_unemployment_rates["total_labor_force"]
-        # round down to three decimals and make percent, not simplifying expression for clarity
-    ).apply(lambda x: math.floor(x * 1000) / 1000) * 100
-    non_msa_unemployment_rates = non_msa_unemployment_rates.drop(
-        columns=["total_unemployment", "total_labor_force"]
-    )
-    full_non_msa_df = lau_non_msa_county_df.merge(
-        non_msa_unemployment_rates,
-        how="left",
-        left_on=["msa_code", "year"],
-        right_index=True,
-    )
-
-    full_df = pd.concat([full_msa_df, full_non_msa_df])
     # merge on the national unemployment rates
-    full_df = full_df.merge(
+    full_df = lau_df.merge(
         national_unemployment_df,
         left_on="year",
         right_on="applies_to_criteria_year",
@@ -282,6 +206,7 @@ def employment_criteria_qualifying_areas(
         [
             "county_name",
             "county_id_fips",
+            # "naics_code",
             "state_id_fips",
             "state_abbr",
             "state_name",

@@ -162,14 +162,14 @@ def test_bls_etl() -> None:
     qcew_df = energy_comms.extract.bls.extract_qcew_data(years=[year], update=True)
     if qcew_df.empty:
         raise AssertionError(f"{year} QCEW data extract returned empty dataframe.")
-    qcew_msa_df, qcew_non_msa_df = energy_comms.transform.bls.transform_qcew_data(
-        qcew_df, non_msa_county_crosswalk=non_msa_county_crosswalk
+    qcew_df = energy_comms.transform.bls.transform_qcew_data(
+        df=qcew_df,
+        msa_county_crosswalk=msa_county_crosswalk,
+        non_msa_county_crosswalk=non_msa_county_crosswalk,
     )
     fossil_employment_df = (
         energy_comms.generate_qualifying_areas.fossil_employment_qualifying_areas(
-            qcew_msa_df=qcew_msa_df,
-            qcew_non_msa_county_df=qcew_non_msa_df,
-            msa_to_county=msa_county_crosswalk,
+            qcew_df=qcew_df,
         )
     )
     if fossil_employment_df.empty:

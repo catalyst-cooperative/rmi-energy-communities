@@ -4,6 +4,7 @@ import logging
 import pathlib
 
 import pandas as pd
+import pytest
 
 import energy_comms
 
@@ -17,23 +18,26 @@ class TestEmploymentQualification:
     functions in ``energy_comms.generate_qualifying_areas``.
     """
 
-    msa_to_county_df = pd.DataFrame()
-    fossil_output = pd.DataFrame()
-    unemployment_output = pd.DataFrame()
-
-    def _get_msa_to_county_df(self, test_dir: pathlib.Path) -> pd.DataFrame:
-        if self.msa_to_county_df.empty:
-            self.msa_to_county_df = pd.read_csv(
-                test_dir / "test_inputs/msa_sample.csv", dtype={"county_id_fips": str}
-            )
-        return self.msa_to_county_df
-
-    def test_fossil_fuel_qualifier(self, test_dir: pathlib.Path) -> None:
-        """Test the fossil fuel employment criteria function."""
-        qcew_df = pd.read_csv(
-            test_dir / "test_inputs/qcew_sample.csv",
-            dtype={"msa_code": str, "industry_code": str, "county_id_fips": str},
+    @pytest.fixture
+    def msa_to_county_df(self, test_dir: pathlib.Path) -> pd.DataFrame:
+        """Return the MSA to county crosswalk from test inputs."""
+        msa_to_county_df = pd.read_csv(
+            test_dir / "test_inputs/msa_sample.csv", dtype={"county_id_fips": str}
         )
+        return msa_to_county_df
+
+    @pytest.fixture
+    def non_msa_to_county_df(self, test_dir: pathlib.Path) -> pd.DataFrame:
+        """Return the non-MSA to county crosswalk from test inputs."""
+        non_msa_to_county_df = pd.read_csv(
+            test_dir / "test_inputs/non_msa_sample.csv",
+            dtype={"county_id_fips": str, "msa_code": str},
+        )
+        return non_msa_to_county_df
+
+    @pytest.fixture
+    def expected_fossil_output(self) -> pd.DataFrame:
+        """Return the expected output of the fossil fuel criteria test."""
         msa_fossil_output = pd.DataFrame(
             {
                 "msa_code": "C1018",
@@ -63,21 +67,64 @@ class TestEmploymentQualification:
         fossil_expected = pd.concat(
             [msa_fossil_output, non_msa_fossil_output]
         ).reset_index(drop=True)
-        self.fossil_output = (
+        return fossil_expected
+
+    @pytest.fixture
+    def expected_unemployment_output(self) -> pd.DataFrame:
+        """Return the expected output of the unemployment criteria test."""
+        unemployment_expected = pd.DataFrame(
+            {
+                "county_id_fips": ["48059", "48059", "01005", "01109"],
+                "msa_code": ["C1018", "C1018", "100004", "100004"],
+                "msa_name": [
+                    "Abilene, TX",
+                    "Abilene, TX",
+                    "Southeast Alabama nonmetropolitan area",
+                    "Southeast Alabama nonmetropolitan area",
+                ],
+                "year": [2019, 2020, 2020, 2020],
+                "local_area_unemployment_rate": [3.5, 21.0, 4.8, 4.8],
+                "meets_unemployment_threshold": [0, 1, 1, 1],
+                "geoid": ["48059", "48059", "01005", "01109"],
+            }
+        ).astype({"year": "Int64"})
+
+        return unemployment_expected
+
+    def test_fossil_fuel_qualifier(
+        self,
+        test_dir: pathlib.Path,
+        expected_fossil_output: pd.DataFrame,
+        msa_to_county_df: pd.DataFrame,
+        non_msa_to_county_df: pd.DataFrame,
+    ) -> None:
+        """Test the fossil fuel employment criteria function."""
+        raw_qcew_df = pd.read_csv(test_dir / "test_inputs/qcew_raw_sample.csv")
+        clean_qcew_df = energy_comms.transform.bls.transform_qcew_data(
+            df=raw_qcew_df,
+            msa_county_crosswalk=msa_to_county_df,
+            non_msa_county_crosswalk=non_msa_to_county_df,
+        )
+        fossil_output = (
             energy_comms.generate_qualifying_areas.fossil_employment_qualifying_areas(
-                qcew_df=qcew_df
+                qcew_df=clean_qcew_df
             )
         )
         fossil_output_small = (
-            self.fossil_output[
-                self.fossil_output.meets_fossil_employment_threshold == 1
-            ][list(fossil_expected.columns)]
+            fossil_output[fossil_output.meets_fossil_employment_threshold == 1][
+                list(expected_fossil_output.columns)
+            ]
             .round(decimals={"percent_fossil_employment": 4})
             .reset_index(drop=True)
         )
-        pd.testing.assert_frame_equal(fossil_expected, fossil_output_small)
+        pd.testing.assert_frame_equal(expected_fossil_output, fossil_output_small)
 
-    def test_unemployment_qualifier(self, test_dir: pathlib.Path) -> None:
+    def test_unemployment_qualifier(
+        self,
+        expected_unemployment_output: pd.DataFrame,
+        msa_to_county_df: pd.DataFrame,
+        non_msa_to_county_df: pd.DataFrame,
+    ) -> None:
         """Test the unemployment rate qualifying function."""
         national_unemployment_df = pd.DataFrame(
             {
@@ -128,48 +175,28 @@ class TestEmploymentQualification:
                 ],
             }
         )
-        msa_county_crosswalk = self._get_msa_to_county_df(test_dir)
-        non_msa_county_crosswalk = pd.read_csv(
-            test_dir / "test_inputs/non_msa_sample.csv",
-            dtype={"county_id_fips": str, "msa_code": str},
-        )
-        lau_expected = pd.DataFrame(
-            {
-                "county_id_fips": ["48059", "48059", "01005", "01109"],
-                "msa_code": ["C1018", "C1018", "100004", "100004"],
-                "msa_name": [
-                    "Abilene, TX",
-                    "Abilene, TX",
-                    "Southeast Alabama nonmetropolitan area",
-                    "Southeast Alabama nonmetropolitan area",
-                ],
-                "year": [2019, 2020, 2020, 2020],
-                "local_area_unemployment_rate": [3.5, 21.0, 4.8, 4.8],
-            }
-        ).astype({"year": "Int64"})
 
-        unemployment_expected = lau_expected.assign(
-            meets_unemployment_threshold=[0, 1, 1, 1]
-        )
         lau_actual = energy_comms.transform.bls.transform_local_area_unemployment_rates(
             raw_lau_df=lau_raw_df,
-            non_msa_county_crosswalk=non_msa_county_crosswalk,
-            msa_county_crosswalk=msa_county_crosswalk,
+            non_msa_county_crosswalk=non_msa_to_county_df,
+            msa_county_crosswalk=msa_to_county_df,
         ).reset_index()
-        self.unemployment_output = (
+        unemployment_output = (
             energy_comms.generate_qualifying_areas.unemployment_rate_qualifying_areas(
                 national_unemployment_df=national_unemployment_df, lau_df=lau_actual
             )
         )
         pd.testing.assert_frame_equal(
-            lau_expected, lau_actual[list(lau_expected.columns)]
-        )
-        pd.testing.assert_frame_equal(
-            unemployment_expected,
-            self.unemployment_output[list(unemployment_expected.columns)],
+            expected_unemployment_output,
+            unemployment_output[list(expected_unemployment_output.columns)],
         )
 
-    def test_employment_criteria_qualifier(self, test_dir: pathlib.Path) -> None:
+    def test_employment_criteria_qualifier(
+        self,
+        test_dir: pathlib.Path,
+        expected_unemployment_output: pd.DataFrame,
+        expected_fossil_output: pd.DataFrame,
+    ) -> None:
         """Test the function generating employment qualifying areas.
 
         Combine the outputs and the fossil and unemployment functions.
@@ -198,25 +225,16 @@ class TestEmploymentQualification:
         county_df = pd.read_pickle(
             test_dir / "test_inputs/tx_al_census_counties_gdf.pkl.gz"
         )  # nosec
-        if self.fossil_output.empty:
-            logger.info(
-                "Fossil fuel qualifying areas dataframe isn't populated, running test_fossil_fuel_qualifier() to generate it."
-            )
-            self.test_fossil_fuel_qualifier(test_dir=test_dir)
-        if self.unemployment_output.empty:
-            logger.info(
-                "Unemployment qualifying areas dataframe isn't populated, running test_unemployment_qualifier() to generate it."
-            )
-            self.test_unemployment_qualifier(test_dir=test_dir)
+
         # currently testing fewer counties in unemployment test
-        county_id_fips_list = self.unemployment_output.county_id_fips.unique()
-        fossil_employment_df = self.fossil_output[
-            self.fossil_output.county_id_fips.isin(county_id_fips_list)
+        county_id_fips_list = expected_unemployment_output.county_id_fips.unique()
+        fossil_employment_df = expected_fossil_output[
+            expected_fossil_output.county_id_fips.isin(county_id_fips_list)
         ]
         employment_output = (
             energy_comms.generate_qualifying_areas.employment_criteria_qualifying_areas(
                 fossil_employment_df=fossil_employment_df,
-                unemployment_df=self.unemployment_output,
+                unemployment_df=expected_unemployment_output,
                 census_county_df=county_df,
                 census_state_df=state_df,
             )

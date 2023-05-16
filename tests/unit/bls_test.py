@@ -30,20 +30,14 @@ class TestEmploymentQualification:
 
     def test_fossil_fuel_qualifier(self, test_dir: pathlib.Path) -> None:
         """Test the fossil fuel employment criteria function."""
-        qcew_msa_df = pd.read_csv(
-            test_dir / "test_inputs/qcew_msa_sample.csv",
-            dtype={
-                "industry_code": str,
-            },
-        )
-        qcew_nonmsa_df = pd.read_csv(
-            test_dir / "test_inputs/qcew_nonmsa_sample.csv",
+        qcew_df = pd.read_csv(
+            test_dir / "test_inputs/qcew_sample.csv",
             dtype={"msa_code": str, "industry_code": str, "county_id_fips": str},
         )
         msa_fossil_output = pd.DataFrame(
             {
                 "msa_code": "C1018",
-                "area_title": "Abilene, TX MSA",
+                "area_title": "Abilene, TX",
                 "year": 2020,
                 "total_employees": 67929,
                 "fossil_employees": 1220,
@@ -71,9 +65,7 @@ class TestEmploymentQualification:
         ).reset_index(drop=True)
         self.fossil_output = (
             energy_comms.generate_qualifying_areas.fossil_employment_qualifying_areas(
-                qcew_msa_df=qcew_msa_df,
-                qcew_non_msa_county_df=qcew_nonmsa_df,
-                msa_to_county=self._get_msa_to_county_df(test_dir=test_dir),
+                qcew_df=qcew_df
             )
         )
         fossil_output_small = (
@@ -194,7 +186,7 @@ class TestEmploymentQualification:
                 "state_abbr": ["TX"] + ["AL"] * 2,
                 "state_name": ["Texas"] + ["Alabama"] * 2,
                 "geoid": ["48059", "01005", "01109"],
-                "site_name": ["Abilene, TX MSA"]
+                "site_name": ["Abilene, TX"]
                 + ["Southeast Alabama nonmetropolitan area"] * 2,
                 "qualifying_criteria": "fossil_fuel_employment",
                 "qualifying_area": "MSA or non-MSA",

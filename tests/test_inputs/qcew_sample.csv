@@ -1,0 +1,28 @@
+msa_code,county_id_fips,area_title,year,industry_code,own_code,annual_avg_emplvl
+C1018,48059,"Abilene, TX ",2012,10,0,30000
+C1018,48253,"Abilene, TX",2012,10,0,6000
+C1018,48441,"Abilene, TX",2012,10,0,30000
+C1018,48059,"Abilene, TX",2012,211,5,10
+C1018,48441,"Abilene, TX",2012,213111,5,100
+C1018,48441,"Abilene, TX",2012,213112,5,0
+C1018,48253,"Abilene, TX",2012,4861,5,0
+C1018,48059,"Abilene, TX",2020,10,0,60000
+C1018,48253,"Abilene, TX",2020,10,0,7000
+C1018,48441,"Abilene, TX",2020,10,0,929
+C1018,48441,"Abilene, TX",2020,211,5,193
+C1018,48059,"Abilene, TX",2020,213111,5,683
+C1018,48253,"Abilene, TX",2020,213112,5,0
+C1018,48253,"Abilene, TX",2020,4861,5,0
+C1018,48059,"Abilene, TX",2020,4862,5,344
+C1018,48253,"Abilene, TX",2020,32411,5,0
+C4974,04027,"Yuma, AZ",2020,10,0,65963
+C4974,04027,"Yuma, AZ",2020,213111,5,0
+C4974,04027,"Yuma, AZ",2020,4862,5,62
+C4974,04027,"Yuma, AZ",2020,32411,5,0
+100004,01005,"Southeast Alabama nonmetropolitan area",2020,10,0,7935
+100004,01005,"Southeast Alabama nonmetropolitan area",2020,211,5,800
+100004,01109,"Southeast Alabama nonmetropolitan area",2020,10,0,14334
+100004,01109,"Southeast Alabama nonmetropolitan area",2020,2121,5,900
+900001,09005,"Connecticut nonmetropolitan area",2020,10,0,56898
+900001,09015,"Connecticut nonmetropolitan area",2020,10,0,35915
+900001,09015,"Connecticut nonmetropolitan area",2020,211,0,100

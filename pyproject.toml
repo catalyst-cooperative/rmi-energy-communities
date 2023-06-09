@@ -22,7 +22,7 @@ dependencies = [
     "geopandas>=0.11,<0.14",
     "openpyxl>=3,!=3.1.1,<4",
     "pandas>=1.5,<2",
-    "plotly>=5.11,<5.15",
+    "plotly>=5.11,<5.16",
     "pygeos>=0.11,<0.15",
     "Shapely>1.8.0,<2.1",
     "sqlalchemy>=1.4,<2",

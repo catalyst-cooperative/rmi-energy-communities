@@ -1,4 +1,5 @@
 """PyTest configuration module. Defines useful fixtures, command line args."""
+
 from __future__ import annotations
 
 import json

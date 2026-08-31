@@ -1,4 +1,5 @@
 """Transform functions for Bureau of Labor Statistics data for employment criteria."""
+
 import logging
 import math
 

@@ -1,4 +1,5 @@
 """General utility functions that are used in a variety of contexts."""
+
 import logging
 from typing import Any, Literal
 

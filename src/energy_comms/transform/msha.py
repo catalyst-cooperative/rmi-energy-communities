@@ -1,4 +1,5 @@
 """Transform functions for the MSHA mine data."""
+
 from typing import Any, Literal
 
 import geopandas

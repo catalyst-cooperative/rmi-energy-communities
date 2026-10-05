@@ -1,4 +1,5 @@
 """Extract data from Bureau of Labor Statistics into dataframes for employment criteria."""
+
 from __future__ import annotations
 
 import io

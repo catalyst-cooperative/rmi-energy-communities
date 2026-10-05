@@ -1,4 +1,5 @@
 """Transform functions for the EIA 860 generators data."""
+
 from datetime import datetime
 from typing import Any, Literal
 

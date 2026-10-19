@@ -1,4 +1,5 @@
 """Extract brownfields sites from EPA source."""
+
 import logging
 
 import pandas as pd

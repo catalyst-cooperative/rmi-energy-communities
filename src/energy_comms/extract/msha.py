@@ -1,4 +1,5 @@
 """Extract MSHA mines data and load into pandas dataframe."""
+
 import io
 import logging
 import zipfile

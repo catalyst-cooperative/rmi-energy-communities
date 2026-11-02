@@ -1,4 +1,5 @@
 """Extract EIA 860 plants data and load into pandas dataframe."""
+
 import pandas as pd
 import sqlalchemy as sa
 

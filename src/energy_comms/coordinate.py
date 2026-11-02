@@ -9,7 +9,7 @@ from energy_comms.extract.bls import QCEW_YEARS
 
 
 def get_coal_criteria_qualifying_areas(
-    census_geometry: Literal["county", "tract"] = "tract"
+    census_geometry: Literal["county", "tract"] = "tract",
 ) -> pd.DataFrame:
     """Get dataframe of qualifying areas under the closed coal mine or plant criteria.
 
@@ -32,7 +32,7 @@ def get_coal_criteria_qualifying_areas(
 
 
 def get_brownfields_criteria_qualifying_areas(
-    census_geometry: Literal["county", "tract"] = "tract"
+    census_geometry: Literal["county", "tract"] = "tract",
 ) -> pd.DataFrame:
     """Get dataframe of qualifying areas under the brownfields criteria.
 

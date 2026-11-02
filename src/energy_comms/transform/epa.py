@@ -1,4 +1,5 @@
 """Transform functiosn for EPA brownfields data."""
+
 import logging
 from typing import Any, Literal
 

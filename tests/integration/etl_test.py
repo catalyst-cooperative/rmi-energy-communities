@@ -1,4 +1,5 @@
 """Test functionality of the ETL for the energy communities criteria."""
+
 from __future__ import annotations
 
 import logging

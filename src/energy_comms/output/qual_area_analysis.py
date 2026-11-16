@@ -1,4 +1,5 @@
 """Perform analyses on the output dataframe of qualifying areas."""
+
 import logging
 
 import pandas as pd
